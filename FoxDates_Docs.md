@@ -103,10 +103,13 @@ oFoxDates.GetNthBusinessDay( 11, 2019, 10)    && returns 11/14/2019 (the 10th bu
 ```
 
 ## IsHoliday()
-Pass a date, find out if it's one of the six major U.S. holidays.
+Pass a date and an optional country code, find out if it's a holiday. Country code defaults to USA. The only other option at this time is Canada.
 ```foxpro
 oFoxDates.IsHoliday( {^2019-11-19})    && returns .F.
-oFoxDates.IsHoliday( {^2019-11-28})    && returns .T. (Thanksgiving Day)
+oFoxDates.IsHoliday( {^2019-11-28})    && returns .T. (Thanksgiving Day in the USA)
+oFoxDates.IsHoliday( {^2019-11-28}, "Canada")    && returns .F. (not Thanksgiving Day in Canada)
+oFoxDates.IsHoliday( {^2019-10-14}, "Canada")    && returns .T. (is Thanksgiving Day in Canada)
+
 ```
 
 ## GetTimeString()

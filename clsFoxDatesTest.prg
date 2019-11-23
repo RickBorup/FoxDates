@@ -1023,7 +1023,7 @@ LOCAL lnMonth, lnYear, lnBusinessDay, ldExpected
 lnMonth = 11
 lnYear = 2019
 lnBusinessDay = 16
-ldExpected = {^2019-11-22}
+ldExpected = {^2019-11-25}		&& November 11 is the Veteran's Day holiday
 This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNthBusinessDay( lnMonth, lnYear, lnBusinessDay), ;
 						 "GetNthBusinessDay() did not return the expected value")
 ENDFUNC
@@ -1039,7 +1039,7 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNthBusinessDay( lnMont
 ENDFUNC
 
 *---------------------------------------------------------------------
-*	Tests for IsHoliday()
+*	Tests for IsHoliday() - no country specified (should default to USA)
 *---------------------------------------------------------------------
 FUNCTION TestIsHoliday_NoInput_ReturnsFalse
 This.AssertFalse( this.ioObjectToBeTested.IsHoliday(), ;
@@ -1076,6 +1076,11 @@ This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-09-02}), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
+FUNCTION TestIsHoliday_IsVeteransDay_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-11-11}), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
 FUNCTION TestIsHoliday_IsThanksgivingDay_ReturnsTrue
 This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-11-28}), ;
 					  "IsHoliday() did not return the expected value")
@@ -1083,6 +1088,117 @@ ENDFUNC
 
 FUNCTION TestIsHoliday_IsChristmasDay_ReturnsTrue
 This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-12-25}), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for IsHoliday() - USA
+*---------------------------------------------------------------------
+FUNCTION TestIsHoliday_NoInputUSA_ReturnsFalse
+This.AssertFalse( this.ioObjectToBeTested.IsHoliday(), ;
+					   "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_BadInputUSA_ReturnsFalse
+This.AssertFalse( this.ioObjectToBeTested.IsHoliday(.F.), ;
+					   "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_NotAHolidayUSA_ReturnsFalse
+This.AssertFalse( this.ioObjectToBeTested.IsHoliday( {^2019-11-19}, "USA"), ;
+						"IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsNewYearsDayUSA_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-01-01}, "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsMemorialDayUSA_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-05-27}, "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsIndependenceDayUSA_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-07-04}, "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsLaborDayUSA_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-09-02}, "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsVeteransDayUSA_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-11-11}, "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsThanksgivingDayUSA_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-11-28}, "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsChristmasDayUSA_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-12-25}, "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for IsHoliday() - Canada
+*---------------------------------------------------------------------
+FUNCTION TestIsHoliday_NoInputCanada_ReturnsFalse
+This.AssertFalse( this.ioObjectToBeTested.IsHoliday(), ;
+					   "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_BadInputCanada_ReturnsFalse
+This.AssertFalse( this.ioObjectToBeTested.IsHoliday(.F.), ;
+					   "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_NotAHolidayCanada_ReturnsFalse
+This.AssertFalse( this.ioObjectToBeTested.IsHoliday( {^2019-11-19}, "Canada"), ;
+						"IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsNewYearsDayCanada_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-01-01}, "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsVictoriaDayCanada_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-05-20}, "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsCanadaDayCanada_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-07-01}, "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsLaborDayCanada_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-09-02}, "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsThanksgivingDayCanada_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-10-14}, "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsVeteransDayCanada_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-11-11}, "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsChristmasDayCanada_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-12-25}, "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsBoxingDayCanada_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-12-26}, "Canada"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 

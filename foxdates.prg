@@ -1,3 +1,11 @@
+*==============================================================================
+* Program:           FOXDATES.PRG
+* Author:            Rick Borup
+* Date Written:      11/23/2019
+* Compiler:          Visual FoxPro 09.00.0000.7423 for Windows
+* Abstract:          A set of functions for working with dates and datetimes.
+*==============================================================================
+
 DEFINE CLASS clsFoxDates AS Custom
 
 *--------------------------------------------------------------------
@@ -515,11 +523,11 @@ ENDFUNC && GetNthBusinessDay
 *------------------------------------
 *   Function: Determines is a given date is a holiday.
 *       Pass: tdDate - a date (optional, defaults to the current date)
+*             tcCountry - optional, defaults to USA
 *     Return: Logical - .T. if holiday, otherwise .F.
-*   Comments: This function recognizes only the six major holidays in
-*             the United States.
+*   Comments: Future enhancement - add other country codes.
 *--------------------------------------------------------------------
-FUNCTION IsHoliday( tdDate as Date) as Logical
+FUNCTION IsHoliday( tdDate as Date, tcCountry as String) as Logical
 IF VARTYPE( tdDate) = "D"
 ELSE
 	tdDate = DATE()
@@ -527,10 +535,38 @@ ENDIF
 IF EMPTY( tdDate)
 	RETURN .F.
 ENDIF
+LOCAL lcCountry
+IF VARTYPE( tcCountry) = "C"
+	lcCountry = UPPER( ALLTRIM( tcCountry))
+ELSE
+	lcCountry = "USA"
+ENDIF
+DO CASE 
+	CASE lcCountry = "USA"
+		RETURN this.IsHolidayUSA( tdDate)
+	CASE lcCountry = "CANADA"
+		RETURN this.IsHolidayCanada( tdDate)
+	OTHERWISE
+		RETURN .F.
+ENDCASE
+ENDFUNC
+
+*--------------------------------------------------------------------
+*   clsFoxDates :: IsHolidayUSA
+*------------------------------------
+*   Function: Determines if the given date is a holiday in the United States
+*       Pass: tdDate - the date
+*     Return: Logical - True if it's a holiday, otherwise False
+*   Comments: This function recognizes the following U.S. holidays:
+*             New Year's Day, Memorial Day, Independence Day,
+*             Labor Day, Veteran's Day, Thanksgiving Day, and Christmas Day
+*--------------------------------------------------------------------
+PROTECTED FUNCTION IsHolidayUSA( tdDate as Date) as Logical 
 LOCAL lnMonth, lnDay, lnDOW, llHoliday
 lnMonth = MONTH( tdDate)
 lnDay = DAY( tdDate)
 lnDOW = DOW( tdDate)
+llHoliday = .F.
 DO CASE
 	
 	*	New Year's Day, 
@@ -541,7 +577,7 @@ DO CASE
 	CASE lnMonth = 5 AND lnDOW = 2 AND lnDay > 24
 		llHoliday = .T.
 
-	* 4th of July
+	* Independence Day (4th of July)
 	CASE lnMonth = 7 AND lnDay = 4
 		llHoliday = .T.
 		
@@ -549,6 +585,10 @@ DO CASE
 	CASE lnMonth = 9 AND lnDOW = 2 AND lnDay < 8
 		llHoliday = .T.
 		
+	*	Veternan's Day (Remembrance Day)
+	CASE lnMonth = 11 AND lnDay = 11 
+		llHoliday = .T.
+	
 	*	Thanksgiving Day (fourth Thursday in November)
 	CASE lnMonth = 11 AND lnDOW = 5 AND BETWEEN( lnDay, 22, 28)
 		llHoliday = .T.
@@ -561,7 +601,65 @@ DO CASE
 		llHoliday = .F.
 ENDCASE
 RETURN llHoliday
-ENDFUNC && IsHoliday
+ENDFUNC && IsHolidayUSA
+
+*--------------------------------------------------------------------
+*   clsFoxDates :: IsHolidayCanada
+*------------------------------------
+*   Function: Determines if the given date is a holiday in Canada
+*       Pass: tdDate - the date
+*     Return: Logical - True if it's a holiday, otherwise False
+*   Comments: This function recognizes the following Canadian holidays:
+*             New Year's Day, Victoria Day, Canada Day, Labour Day, 
+*             Thanksgiving Day, Remembrance Day, Christmas Day, and Boxing Day.
+*
+*             Source: https://www.thecanadianencyclopedia.ca/en/article/national-holidays 
+*--------------------------------------------------------------------
+PROTECTED FUNCTION IsHolidayCanada( tdDate as Date) as Logical 
+LOCAL lnMonth, lnDay, lnDOW, llHoliday
+lnMonth = MONTH( tdDate)
+lnDay = DAY( tdDate)
+lnDOW = DOW( tdDate)
+llHoliday = .F.
+DO CASE
+	
+	*	New Year's Day (January 1st) 
+	CASE lnMonth = 1 AND lnDay = 1	
+		llHoliday = .T.
+	
+	*	Victoria Day (the Monday before May 25)
+	CASE lnMonth = 5 AND lnDOW = 2 AND BETWEEN( lnDay, 18, 24)
+		llHoliday = .T.
+
+	* Canada Day (July 1st)
+	CASE lnMonth = 7 AND lnDay = 1
+		llHoliday = .T.
+		
+	*	Labour Day (first Monday in September)
+	CASE lnMonth = 9 AND lnDOW = 2 AND lnDay < 8
+		llHoliday = .T.
+		
+	*	Thanksgiving Day (second Monday in October)
+	CASE lnMonth = 10 AND lnDOW = 2 AND BETWEEN( lnDay, 8, 14)
+		llHoliday = .T.
+
+	*	Remembrance Day
+	CASE lnMonth = 11 AND lnDay = 11 
+		llHoliday = .T.
+	
+	*	Christmas Day
+	CASE lnMonth = 12 AND lnDay = 25 
+		llHoliday = .T.
+	
+	*	Boxing Day
+	CASE lnMonth = 12 AND lnDay = 26 
+		llHoliday = .T.
+	
+	OTHERWISE
+		llHoliday = .F.
+ENDCASE
+RETURN llHoliday
+ENDFUNC && IsHolidayCanada
 
 *--------------------------------------------------------------------
 *   clsFoxDates :: GetTimeString
