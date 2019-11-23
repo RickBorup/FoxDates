@@ -1,0 +1,6 @@
+*.fxp
+*.FXP
+*.bak
+*.BAK
+FXU*.*
+Tests/
