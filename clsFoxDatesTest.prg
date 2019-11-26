@@ -184,6 +184,14 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetFirstOfMonth( .F.), ;
 						 "GetFirstOfMonth() did not return the expected date")
 ENDFUNC
 
+FUNCTION TestGetFirstOfMonth_EmptyDate_ReturnsBOMofCurrentDate
+LOCAL ldToday, ldExpected
+ldToday = DATE()
+ldExpected = DATE( YEAR( ldToday), MONTH( ldToday), 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetFirstOfMonth( {}), ;
+						 "GetFirstOfMonth() did not return the expected date")
+ENDFUNC
+
 FUNCTION TestGetFirstOfMonth_TodaysDate_ReturnsBOMofCurrentDate
 LOCAL ldToday, ldExpected
 ldToday = DATE()
@@ -216,6 +224,18 @@ lnLastDay = ICASE( INLIST( MONTH( ldToday), 1, 3, 5, 7, 8, 10, 12), 31, ;
 LOCAL ldExpected
 ldExpected = DATE( YEAR( ldToday), MONTH( ldToday), lnLastDay)
 This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastOFMonth( .F.), ;
+						 "GetLastOFMonth() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastOFMonth_EmptyDate_ReturnsEOMofCurrentDate
+LOCAL ldToday, lnLastDay
+ldToday = DATE()
+lnLastDay = ICASE( INLIST( MONTH( ldToday), 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( MONTH( ldToday), 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+LOCAL ldExpected
+ldExpected = DATE( YEAR( ldToday), MONTH( ldToday), lnLastDay)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastOFMonth( {}), ;
 						 "GetLastOFMonth() did not return the expected date")
 ENDFUNC
 
@@ -260,6 +280,143 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastOFMonth( {^2020-02
 ENDFUNC
 
 *---------------------------------------------------------------------
+*	Tests for GetDaysInMonth()
+*---------------------------------------------------------------------
+FUNCTION TestGetDaysInMonth_NoInput_ReturnsDaysInCurrentMonth
+LOCAL ldToday, lnExpected
+ldToday = DATE()
+lnExpected = ICASE( INLIST( MONTH( ldToday), 1, 3, 5, 7, 8, 10, 12), 31, ;
+						  MONTH( ldToday) = 2, IIF( this.IsLeapYear( YEAR( ldToday)), 29, 28), ;
+						  30)
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth(), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+FUNCTION TestGetDaysInMonth_BadInput_ReturnsDaysInCurrentMonth
+LOCAL ldToday, lnExpected
+ldToday = DATE()
+lnExpected = ICASE( INLIST( MONTH( ldToday), 1, 3, 5, 7, 8, 10, 12), 31, ;
+						  MONTH( ldToday) = 2, IIF( this.IsLeapYear( YEAR( ldToday)), 29, 28), ;
+						  30)
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( .F.), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+FUNCTION TestGetDaysInMonth_EmptyDate_ReturnsDaysInCurrentMonth
+LOCAL ldToday, lnExpected
+ldToday = DATE()
+lnExpected = ICASE( INLIST( MONTH( ldToday), 1, 3, 5, 7, 8, 10, 12), 31, ;
+						  MONTH( ldToday) = 2, IIF( this.IsLeapYear( YEAR( ldToday)), 29, 28), ;
+						  30)
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	January
+FUNCTION TestGetDaysInMonth_January_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2019-01-01}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	February (not a leap year)
+FUNCTION TestGetDaysInMonth_FebruaryNotLeapYear_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 28
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2019-02-01}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	February (leap year)
+FUNCTION TestGetDaysInMonth_FebruaryLeapYear_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 29
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2020-02-01}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	March
+FUNCTION TestGetDaysInMonth_March_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2019-03-01}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	April
+FUNCTION TestGetDaysInMonth_April_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 30
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2019-04-01}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	May
+FUNCTION TestGetDaysInMonth_May_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2019-05-01}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	June
+FUNCTION TestGetDaysInMonth_June_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 30
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2019-06-01}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	July
+FUNCTION TestGetDaysInMonth_July_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2019-07-01}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	August
+FUNCTION TestGetDaysInMonth_August_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2019-08-01}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	September
+FUNCTION TestGetDaysInMonth_September_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 30
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2019-09-01}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	October
+FUNCTION TestGetDaysInMonth_October_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2019-10-01}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	November
+FUNCTION TestGetDaysInMonth_November_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 30
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2019-11-01}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	December
+FUNCTION TestGetDaysInMonth_December_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2019-12-01}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*---------------------------------------------------------------------
 *	Tests for GetLastEOM()
 *---------------------------------------------------------------------
 FUNCTION TestGetLastEOM_NoInput_ReturnsEOMofLastMonth
@@ -285,6 +442,19 @@ lnLastDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
 						 28)  && change to 29 if testing during a leap year
 ldExpected = DATE( lnYear, lnMonth, lnLastDay)
 This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOM( .F.), ;
+						 "GetLastEOM() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastEOM_EmptyDate_ReturnsEOMofLastMonth
+LOCAL ldToday, ldExpected, lnYear, lnMonth, lnLastDay
+ldToday = DATE()
+lnYear = IIF( MONTH( ldToday) = 1, YEAR( ldToday) - 1, YEAR( ldToday))
+lnMonth = IIF( MONTH( ldToday) = 1, 12, MONTH( ldToday) - 1)
+lnLastDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+ldExpected = DATE( lnYear, lnMonth, lnLastDay)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOM( {}), ;
 						 "GetLastEOM() did not return the expected date")
 ENDFUNC
 
@@ -315,6 +485,34 @@ lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 1, ;
 lnDay = 1
 ldDate = DATE( lnYear, lnMonth, lnDay)
 This.AssertEquals( ldDate, this.ioObjectToBeTested.GetBOQ(), ;
+						 "GetBOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetBOQ_BadInput_ReturnsBOQofCurrentDate
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 1, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 4, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 7, ;
+					  10)
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+This.AssertEquals( ldDate, this.ioObjectToBeTested.GetBOQ( .F.), ;
+						 "GetBOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetBOQ_EmptyDate_ReturnsBOQofCurrentDate
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 1, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 4, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 7, ;
+					  10)
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+This.AssertEquals( ldDate, this.ioObjectToBeTested.GetBOQ( {}), ;
 						 "GetBOQ() did not return the expected date")
 ENDFUNC
 
@@ -490,6 +688,38 @@ lnDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
 					28)	&& change to 29 if testing in a leap year
 ldExpected = DATE( lnYear, lnMonth, lnDay)
 This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ(), ;
+						 "GetEOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetEOQ_BadInput_ReturnsEOQofCurrentDate
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 3, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 6, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 9, ;
+					  12)
+lnDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+					INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+					28)	&& change to 29 if testing in a leap year
+ldExpected = DATE( lnYear, lnMonth, lnDay)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( .F.), ;
+						 "GetEOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetEOQ_EmptyDate_ReturnsEOQofCurrentDate
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 3, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 6, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 9, ;
+					  12)
+lnDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+					INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+					28)	&& change to 29 if testing in a leap year
+ldExpected = DATE( lnYear, lnMonth, lnDay)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( {}), ;
 						 "GetEOQ() did not return the expected date")
 ENDFUNC
 
@@ -684,6 +914,22 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOQ( .F.), ;
 						 "GetLastEOQ() did not return the expected date")
 ENDFUNC
 
+FUNCTION TestGetLastEOQ_EmptyDate_ReturnsEOQofLastQuarter
+LOCAL ldToday, ldExpected, lnYear, lnMonth, lnLastDay
+ldToday = DATE()
+lnYear = IIF( MONTH( ldToday) = 1, YEAR( ldToday) - 1, YEAR( ldToday))
+lnMonth = ICASE( BETWEEN( MONTH( ldToday), 1, 3), 12, ;
+					  BETWEEN( MONTH( ldToday), 4, 6), 3, ;
+					  BETWEEN( MONTH( ldToday), 7, 9), 6, ;
+					  9)
+lnLastDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+ldExpected = DATE( lnYear, lnMonth, lnLastDay)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOQ( {}), ;
+						 "GetLastEOQ() did not return the expected date")
+ENDFUNC
+
 FUNCTION TestGetLastEOQ_TodaysDate_ReturnsEOQofLastQuarter
 LOCAL ldToday, ldExpected, lnYear, lnMonth, lnLastDay
 ldToday = DATE()
@@ -719,6 +965,14 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOY( .F.), ;
 						 "GetLastEOY() did not return the expected date")
 ENDFUNC
 
+FUNCTION TestGetLastEOY_EmptyDate_ReturnsEOYofLastYear
+LOCAL ldToday, ldExpected
+ldToday = DATE()
+ldExpected = DATE( YEAR( ldToday) - 1, 12, 31)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOY( {}), ;
+						 "GetLastEOY() did not return the expected date")
+ENDFUNC
+
 FUNCTION TestGetLastEOY_TodaysDate_ReturnsEOYofLastYear
 LOCAL ldToday, ldExpected
 ldToday = DATE()
@@ -749,6 +1003,17 @@ ldExpected = ICASE( lnDOW = 1, ldToday - 6, ;
 				 		  lnDOW = 2, ldToday - 7, ;
 				 		  ldToday - ( lnDOW - 2))
 This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastMonday( .F.), ;
+						 "GetLastMonday() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastMonday_EmptyDate_ReturnsLastMonday
+LOCAL ldToday, lnDOW, ldExpected
+ldToday = DATE()
+lnDOW = DOW( ldToday)
+ldExpected = ICASE( lnDOW = 1, ldToday - 6, ; 
+				 		  lnDOW = 2, ldToday - 7, ;
+				 		  ldToday - ( lnDOW - 2))
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastMonday( {}), ;
 						 "GetLastMonday() did not return the expected date")
 ENDFUNC
 
@@ -830,6 +1095,17 @@ ldExpected = ICASE( lnDOW = 1, ldToday + 1, ;
 				 		  lnDOW = 2, ldToday + 7, ;
 				 		  ldToday + ( 7 - lnDOW) + 2)
 This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNextMonday( .F.), ;
+						 "GetNextMonday() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetNextMonday_EmptyDate_ReturnsNextMonday
+LOCAL ldToday, lnDOW, ldExpected
+ldToday = DATE()
+lnDOW = DOW( ldToday)
+ldExpected = ICASE( lnDOW = 1, ldToday + 1, ; 
+				 		  lnDOW = 2, ldToday + 7, ;
+				 		  ldToday + ( 7 - lnDOW) + 2)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNextMonday( {}), ;
 						 "GetNextMonday() did not return the expected date")
 ENDFUNC
 
@@ -1018,6 +1294,36 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNthBusinessDay(), ;
 						 "GetNthBusinessDay() did not return the expected value")
 ENDFUNC
 
+FUNCTION TestGetNthBusinessDay_BadMonth_ReturnsEmptyDate
+LOCAL lnMonth, lnYear, lnBusinessDay, ldExpected
+lnMonth = 13
+lnYear = 2019
+lnBusinessDay = 16
+ldExpected = {}
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNthBusinessDay( lnMonth, lnYear, lnBusinessDay), ;
+						 "GetNthBusinessDay() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetNthBusinessDay_BadYear_ReturnsEmptyDate
+LOCAL lnMonth, lnYear, lnBusinessDay, ldExpected
+lnMonth = 11
+lnYear = 0
+lnBusinessDay = 16
+ldExpected = {}
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNthBusinessDay( lnMonth, lnYear, lnBusinessDay), ;
+						 "GetNthBusinessDay() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetNthBusinessDay_BadBusinessDay_ReturnsEmptyDate
+LOCAL lnMonth, lnYear, lnBusinessDay, ldExpected
+lnMonth = 11
+lnYear = 2019
+lnBusinessDay = 0
+ldExpected = {}
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNthBusinessDay( lnMonth, lnYear, lnBusinessDay), ;
+						 "GetNthBusinessDay() did not return the expected value")
+ENDFUNC
+
 FUNCTION TestGetNthBusinessDay_Test1_ReturnsExpected
 LOCAL lnMonth, lnYear, lnBusinessDay, ldExpected
 lnMonth = 11
@@ -1034,6 +1340,26 @@ lnMonth = 1
 lnYear = 2020
 lnBusinessDay = 1
 ldExpected = {^2020-01-02}
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNthBusinessDay( lnMonth, lnYear, lnBusinessDay), ;
+						 "GetNthBusinessDay() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetNthBusinessDay_Test3_ReturnsExpected
+LOCAL lnMonth, lnYear, lnBusinessDay, ldExpected
+lnMonth = 9
+lnYear = 2019
+lnBusinessDay = 1
+ldExpected = {^2019-09-03}
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNthBusinessDay( lnMonth, lnYear, lnBusinessDay), ;
+						 "GetNthBusinessDay() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetNthBusinessDay_Test4_ReturnsExpected
+LOCAL lnMonth, lnYear, lnBusinessDay, ldExpected
+lnMonth = 10
+lnYear = 2019
+lnBusinessDay = 23
+ldExpected = {^2019-10-31}
 This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNthBusinessDay( lnMonth, lnYear, lnBusinessDay), ;
 						 "GetNthBusinessDay() did not return the expected value")
 ENDFUNC
@@ -1819,99 +2145,6 @@ ENDFUNC
 *!*	*!*	This.ioAssert.ReportNotImplemented("TestGetFirstOfMonth is not implemented yet")
 *!*	*!*	RETURN .T.
 *!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetLastOfMonth_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetLastEOM_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetBOQ_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetEOQ_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetLastEOQ_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetLastEOY_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetLastMonday_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetNextMonday_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetDateFromString_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestIsLeapYear_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetDateDayOrdinal_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestFormatDate_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetNthBusinessDay_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestIsHoliday_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetTimeString_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetDisplayTime_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetSecondsFromTimeString_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetTimeStringFromSeconds_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetEndTime_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetDuration_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGeRFC2822_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestIsValidTimeString_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
-*!*	HIDDEN FUNCTION TestGetIntervalDays_NotImplemented
-*!*	This.AssertNotImplemented( "This test is not yet implemented")
-*!*	ENDFUNC
-
 
 FUNCTION testNewTest
 * 1. Change the name of the test to reflect its purpose. Test one thing only.

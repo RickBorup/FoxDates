@@ -13,6 +13,7 @@ oFoxDates.GetLastOfMonth( {^2019-11-12})  && returns 11/30/2019
 oFoxDates.GetLastOfMonth( {^2019-02-01})  && returns 02/28/2019 (not a leap year)
 oFoxDates.GetLastOfMonth( {^2020-02-01})  && returns 02/29/2020 (is a leap year)
 ```
+*If you make changes, run the FoxUnit test suite in clsFoxDatesTest.prg to ensure all tests still pass. Note: some functions in this class depend on other functions in this class, so changes to one function can affect others.*
 
 ## GetFirstOfMonth()
 Pass a date, get back the first day of that month.   
@@ -24,6 +25,12 @@ oFoxDates.GetFirstOfMonth( {^2019-11-19})    && returns 11/01/2019
 Pass a date, get back the last day of that month.
 ```foxpro
 oFoxDates.GetLastOfMonth( {^2019-11-19})    && returns 11/30/2019
+```
+
+## GetDaysInMonth()
+Pass a date, get back the number of days in that month.
+```foxpro
+oFoxDates.GetDaysInMonth( {^2019-11-19})    && returns 30
 ```
 
 ## GetLastEOM()

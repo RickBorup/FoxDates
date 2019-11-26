@@ -39,7 +39,7 @@ ENDPROC && Destroy
 *   Comments: 
 *--------------------------------------------------------------------
 FUNCTION GetFirstOfMonth( tdDate as Date) as Date 
-IF VARTYPE( tdDate) = "D"
+IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
 ENDIF
@@ -55,7 +55,7 @@ ENDFUNC && GetFirstOfMonth
 *   Comments: 
 *--------------------------------------------------------------------
 FUNCTION GetLastOfMonth( tdDate as Date) as Date 
-IF VARTYPE( tdDate) = "D"
+IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
 ENDIF
@@ -63,6 +63,25 @@ RETURN GOMONTH( tdDate - DAY( tdDate) + 1, 1) - 1
 *	Another alternative...
 *	RETURN GOMONTH( tdDate, 1) - DAY( GOMONTH( tdDate, 1))
 ENDFUNC && GetLastOfMonth
+
+*--------------------------------------------------------------------
+*   clsFoxDates :: GetDaysInMonth
+*------------------------------------
+*   Function: Get the number of days in the specified month and year
+*       Pass: tdDate - a date (optional, defaults to the current date)
+*     Return: Integer - the number of days in the month
+*   Comments: 
+*--------------------------------------------------------------------
+FUNCTION GetDaysInMonth( tdDate as Date) as Integer
+IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+ELSE
+	tdDate = DATE()
+ENDIF
+LOCAL ldDate, lnDaysInMonth
+ldDate = DATE( YEAR( tdDate), MONTH( tdDate), 1)	&& first of the month
+lnDaysInMonth = GOMONTH( ldDate, 1) - ldDate			&& days in that month
+RETURN lnDaysInMonth
+ENDFUNC && GetDaysInMonth
 
 *--------------------------------------------------------------------
 *   clsFoxDates :: GetLastEOM
@@ -73,7 +92,7 @@ ENDFUNC && GetLastOfMonth
 *   Comments: 
 *--------------------------------------------------------------------
 FUNCTION GetLastEOM( tdDate as Date) as Date
-IF VARTYPE( tdDate) = "D"
+IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
 ENDIF
@@ -89,7 +108,7 @@ ENDFUNC && GetLastEOM
 *   Comments: Calendar quarters are Jan-Mar, Apr-Jun, Jul-Sep, and Oct-Dec
 *--------------------------------------------------------------------
 FUNCTION GetBOQ( tdDate as Date) as Date
-IF VARTYPE( tdDate) = "D"
+IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
 ENDIF
@@ -111,7 +130,7 @@ ENDFUNC && GetBOQ
 *   Comments: 
 *--------------------------------------------------------------------
 FUNCTION GetEOQ( tdDate as Date) as Date
-IF VARTYPE( tdDate) = "D"
+IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
 ENDIF
@@ -149,7 +168,7 @@ ENDFUNC && GetEOQ
 *   Comments: 
 *--------------------------------------------------------------------
 FUNCTION GetLastEOQ( tdDate as Date) as Date
-IF VARTYPE( tdDate) = "D"
+IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
 ENDIF
@@ -182,7 +201,7 @@ ENDFUNC && GetLastEOQ
 *   Comments: 
 *--------------------------------------------------------------------
 FUNCTION GetLastEOY( tdDate as Date) as Date
-IF VARTYPE( tdDate) = "D"
+IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
 ENDIF
@@ -202,7 +221,7 @@ ENDFUNC && GetLastEOY
 *   Comments: 
 *--------------------------------------------------------------------
 FUNCTION GetLastMonday( tdDate as Date) as Date 
-IF VARTYPE( tdDate) = "D"
+IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
 ENDIF
@@ -229,7 +248,7 @@ ENDFUNC && GetLastMonday
 *   Comments: 
 *--------------------------------------------------------------------
 FUNCTION GetNextMonday( tdDate as Date) as Date
-IF VARTYPE( tdDate) = "D"
+IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
 ENDIF
@@ -359,7 +378,7 @@ ENDFUNC && IsLeapYear
 *   Comments: 
 *--------------------------------------------------------------------
 FUNCTION GetDateDayOrdinal( tdDate as Date) as String
-IF VARTYPE( tdDate) = "D"
+IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
 ENDIF
@@ -445,12 +464,9 @@ ENDFUNC && GetDateDayOrdinal
 *   Comments: 
 *--------------------------------------------------------------------
 FUNCTION GetFormattedDateString( tdDate as Date, tnFormat as Integer ) as String
-IF VARTYPE( tdDate) = "D"
+IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
-ENDIF
-IF EMPTY( tdDate)
-	RETURN ""
 ENDIF
 LOCAL lnFormat, lcString
 lnFormat = IIF( VARTYPE( tnFormat) = "N" AND BETWEEN( INT( tnFormat), 1, 2), INT( tnFormat), 1)
@@ -494,23 +510,29 @@ IF NOT BETWEEN( tnYear, 1752, 9999)
 	RETURN {}
 ENDIF
 
-LOCAL ldDate, lnDaysInMonth, lnTargetDay, lnDay, lnBusinessDay
+LOCAL ldDate, lnDaysInMonth
 *	Get number of days in the month.
-ldDate = DATE( tnYear, tnMonth, 1)					&& first of the month
-lnDaysInMonth = GOMONTH( ldDate, 1) - ldDate		&& days in that month
+ldDate = DATE( tnYear, tnMonth, 1)		&& first of the month
+lnDaysInMonth = this.GetDaysInMonth( ldDate)		&& days in that month
+
 *	The ordinal target business day in a given month must be less than
 *	or equal to the actual number of days in that month.
-lnTargetDay = MIN( tnBusinessDay, lnDaysInMonth)
+IF BETWEEN( tnBusinessDay, 1, lnDaysInMonth)
+ELSE
+	RETURN {}
+ENDIF
+
+LOCAL lnDay, lnBusinessDay
 lnDay = 1
 lnBusinessDay = 0
 DO WHILE lnDay < lnDaysInMonth
-	*	Count business days as Monday through Friday except major holidays.
+	*	Count business days as Monday through Friday except holidays.
 	ldDate = DATE( tnYear, tnMonth, lnDay)
 	IF BETWEEN( DOW( ldDate), 2, 6) AND NOT this.IsHoliday( ldDate)
 		*	If it's a weekday and not a holiday, then it's a business day.
 		lnBusinessDay = lnBusinessDay + 1
 	ENDIF
-	IF lnBusinessDay = lnTargetDay
+	IF lnBusinessDay = tnBusinessDay
 		EXIT
 	ENDIF
 	lnDay = lnDay + 1
@@ -528,12 +550,9 @@ ENDFUNC && GetNthBusinessDay
 *   Comments: Future enhancement - add other country codes.
 *--------------------------------------------------------------------
 FUNCTION IsHoliday( tdDate as Date, tcCountry as String) as Logical
-IF VARTYPE( tdDate) = "D"
+IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
-ENDIF
-IF EMPTY( tdDate)
-	RETURN .F.
 ENDIF
 LOCAL lcCountry
 IF VARTYPE( tcCountry) = "C"
@@ -855,7 +874,7 @@ ENDFUNC && GetDuration
 *             Returns the empty string if txDateTime is not a date or a datetime.
 *--------------------------------------------------------------------
 FUNCTION GetRFC2822( txDateTime as Variant, tcOffset as String) as String
-IF VARTYPE( txDateTime) = "D" OR VARTYPE( txDateTime) = "T"
+IF ( VARTYPE( txDateTime) = "D" OR VARTYPE( txDateTime) = "T") AND NOT EMPTY( txDateTime)
 ELSE
 	RETURN ""
 ENDIF
@@ -996,7 +1015,11 @@ ENDFUNC && Get24HourTimeString
 FUNCTION GetIntervalDays( tdStartDate as Date, ;
 								  tdEndDate as Date, ;
 								  tnIntervalType as Integer) as Integer 
-IF VARTYPE( tdStartDate) = "D" AND VARTYPE( tdEndDate) = "D"
+IF VARTYPE( tdStartDate) = "D" AND NOT EMPTY( tdStartDate)
+ELSE
+	RETURN 0
+ENDIF
+IF VARTYPE( tdEndDate) = "D" AND NOT EMPTY( tdEndDate)
 ELSE
 	RETURN 0
 ENDIF
