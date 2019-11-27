@@ -6,11 +6,11 @@ Project Manager: [Rick Borup](https://github.com/RickBorup)
 
 **FoxDates** is a collection of helpful functions for working with dates and times in Visual FoxPro.
 
-This project includes a set of [FoxUnit](https://github.com/VFPX/FoxUnit) tests for the functions - see [clsFoxDatesTest.prg](blob/master/clsFoxDatesTest.prg).
+This project includes a set of [FoxUnit](https://github.com/VFPX/FoxUnit) tests for the functions - see `clsFoxDatesTest.prg`.
 
 ## Documentation
 
-To use, instantiate [`clsFoxDates`](blob/5da8ab0b4fe9596bd145fb9585075510db96fb6e/foxdates.prg#L9-L623) from [`foxdates.prg`](blob/master/foxdates.prg) and call the desired method.
+To use, instantiate `clsFoxDates` from `foxdates.prg` and call the desired method.
 
 Examples:
 ```foxpro
