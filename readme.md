@@ -10,7 +10,7 @@ This project includes a set of [FoxUnit](https://github.com/VFPX/FoxUnit) tests 
 
 ## Documentation
 
-To use, instantiate *clsFoxDates* from *foxdates.prg* and call the desired method.
+To use, instantiate [`clsFoxDates`](blob/5da8ab0b4fe9596bd145fb9585075510db96fb6e/foxdates.prg#L9-L623) from [`foxdates.prg`](blob/master/foxdates.prg) and call the desired method.
 
 Examples:
 ```foxpro
