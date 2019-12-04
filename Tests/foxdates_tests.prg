@@ -1,5 +1,5 @@
 **********************************************************************
-DEFINE CLASS clsFoxDatesTest as FxuTestCase OF FxuTestCase.prg
+DEFINE CLASS foxdates_tests as FxuTestCase OF FxuTestCase.prg
 **********************************************************************
 	#IF .f.
 	*
