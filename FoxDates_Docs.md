@@ -156,11 +156,13 @@ oFoxDates.IsHoliday( {^2019-10-14}, "Canada")    && returns .T. (is Thanksgiving
 ### GetRFC2822() <a name="GetRFC2822"></a>
 Pass a date or a datetime, get back a string in RFC 2822 format.
 
-***Note - does NOT adjust for time zones. All times are assumed to be UTC (+0000) unless an offset string is passed as the second parameter.***
+***Note - does NOT adjust for time zones. All times are assumed to be UTC (+0000) unless an offset  is passed as the second parameter. The offset can be passed as a string like '-0600' or '+0600' or as a numeric value like -6 or 6 (same as +6). The numeric values support .5 and .75 for those time zones that use them. (Reference: https://www.timeanddate.com/time/current-number-time-zones.html)***
 ```foxpro
-oFoxDates.GetRFC2822( {^2019-11-19})    && returns "Tue, 19 Nov 2019 12:00:00 +0000"
-oFoxDates.GetRFC2822( {^2019-11-19 17:11:00})    && returns "Tue, 19 Nov 2019 17:11:00 +0000"
-oFoxDates.GetRFC2822( DATETIME(), "-0600")    && returned "Tue, 19 Nov 2019 13:12:02 -0600"
+oFoxDates.GetRFC2822( {^2019-11-19})           && returns "Tue, 19 Nov 2019 12:00:00 +0000"
+oFoxDates.GetRFC2822( {^2019-11-19 17:11:00})  && returns "Tue, 19 Nov 2019 17:11:00 +0000"
+oFoxDates.GetRFC2822( DATETIME(), "-0600")     && returns "Tue, 19 Nov 2019 13:12:02 -0600"
+oFoxDates.GetRFC2822( DATETIME(), -6)          && returns "Tue, 19 Nov 2019 13:12:02 -0600"
+oFoxDates.GetRFC2822( DATETIME(), 10.5)        && returns "Tue, 19 Nov 2019 12:00:00 +1030"
 ```
 
 ### GetIntervalDays() <a name="GetIntervalDays"></a>  
