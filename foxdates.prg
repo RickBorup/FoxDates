@@ -860,7 +860,8 @@ ENDFUNC && GetDuration
 *------------------------------------
 *   Function: Get the RFC 2822 time string from a date or datetime.
 *       Pass: txDateTime - the date or datetime
-*             tcOffset   - the time zone offset as a string (e.g., "-0500")
+*             txOffset   - the time zone offset as a number (e.g., -5)
+*                          or as a string (e.g., "-0500")
 *     Return: Character
 *   Comments: RFC 2822 dates are formatted as "Thu, 21 Jul 2005 16:43:00 +0000"
 *             This format is also used by RSS.
@@ -873,14 +874,16 @@ ENDFUNC && GetDuration
 *
 *             Returns the empty string if txDateTime is not a date or a datetime.
 *--------------------------------------------------------------------
-FUNCTION GetRFC2822( txDateTime as Variant, tcOffset as String) as String
+FUNCTION GetRFC2822( txDateTime as Variant, txOffset as Variant) as String
 IF ( VARTYPE( txDateTime) = "D" OR VARTYPE( txDateTime) = "T") AND NOT EMPTY( txDateTime)
 ELSE
 	RETURN ""
 ENDIF
 LOCAL lcReturnString, lcDay, lcDate, lcMonth, lcYear, lcHour, lcMinute, lcSecond, lcOffset
 lcReturnString = ""
-lcOffset = IIF( VARTYPE( tcOffset) = "C", tcOffset, "+0000")
+lcOffset = ICASE( VARTYPE( txOffset) = "C", txOffset, ;
+						VARTYPE( txOffset) = "N", this.GetOffsetString( txOffset), ;
+						"+0000")
 DO CASE 
 	CASE VARTYPE( txDateTime) = "D"
 		lcDay = LEFT( CDOW( txDatetime), 3)
@@ -908,6 +911,30 @@ lcReturnString = lcDay + ", " + lcDate + " " + lcMonth + " " + lcYear + " " +  ;
 		  lcHour + ":" + lcMinute + ":" + lcSecond + SPACE(1) + lcOffset
 RETURN lcReturnString
 ENDFUNC && GetRFC2822
+
+*--------------------------------------------------------------------
+*   clsFoxDates :: GetOffsetString
+*------------------------------------
+*   Function: Accept a numeric value, return the equivalent string 
+*       Pass: tnOffset - the numeric offset, e.g., -6
+*     Return: Character
+*   Comments: Return value is formatted for use in an RFC2822 datetime 
+*--------------------------------------------------------------------
+PROTECTED FUNCTION GetOffsetString( tnOffset as Number) as String
+IF VARTYPE( tnOffset) = "N"
+ELSE
+	RETURN "+0000"
+ENDIF
+LOCAL lcPlusMinus, lnIntegerValue, lnDecimalValue, lcHours, lcMinutes
+lcPlusMinus = IIF( tnOffset >= 0, "+", "-")
+lnIntegerValue = ABS( INT( tnOffset))
+lnDecimalValue = IIF( lnIntegerValue = 0, .0, MOD( tnOffset, lnIntegerValue))
+lcHours = PADL( ALLTRIM( STR( lnIntegerValue)), 2, "0") 
+lcMinutes = ICASE( lnDecimalValue = .5, "30", ;
+						 lnDecimalValue = .75, "45", ;
+						 "00")
+RETURN lcPlusMinus + lcHours + lcMinutes
+ENDFUNC && GetOffsetString
 
 *--------------------------------------------------------------------
 *   clsFoxDates :: IsValidTimeString
