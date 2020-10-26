@@ -1780,10 +1780,94 @@ This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}
 						 "GetRFC2822() did not return the expected value")
 ENDFUNC
 
-FUNCTION TestGetRFC2822_DateWithOffset_ReturnsExpectedValue
+FUNCTION TestGetRFC2822_DateWithNegativeOffset_ReturnsExpectedValue
 LOCAL lcExpected
-lcExpected = "Tue, 19 Nov 2019 12:00:00 -6000"
-This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, "-6000"), ;
+lcExpected = "Tue, 19 Nov 2019 12:00:00 -0600"
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, "-0600"), ;
+						 "GetRFC2822() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetRFC2822_DateWithNegativeTwelveOffset_ReturnsExpectedValue
+LOCAL lcExpected
+lcExpected = "Tue, 19 Nov 2019 12:00:00 -1200"
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, "-1200"), ;
+						 "GetRFC2822() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetRFC2822_DateWithPositiveOffset_ReturnsExpectedValue
+LOCAL lcExpected
+lcExpected = "Tue, 19 Nov 2019 12:00:00 +0600"
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, "+0600"), ;
+						 "GetRFC2822() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetRFC2822_DateWithPositiveTwelveOffset_ReturnsExpectedValue
+LOCAL lcExpected
+lcExpected = "Tue, 19 Nov 2019 12:00:00 +1200"
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, "+1200"), ;
+						 "GetRFC2822() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetRFC2822_DateWithZeroNumericOffset_ReturnsExpectedValue
+LOCAL lcExpected
+lcExpected = "Tue, 19 Nov 2019 12:00:00 +0000"
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, 0), ;
+						 "GetRFC2822() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetRFC2822_DateWithNegativeNumericOffset_ReturnsExpectedValue
+LOCAL lcExpected
+lcExpected = "Tue, 19 Nov 2019 12:00:00 -0600"
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, -6), ;
+						 "GetRFC2822() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetRFC2822_DateWithNegativeTwelveNumericOffset_ReturnsExpectedValue
+LOCAL lcExpected
+lcExpected = "Tue, 19 Nov 2019 12:00:00 -1200"
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, -12), ;
+						 "GetRFC2822() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetRFC2822_DateWithPositiveNumericOffset_ReturnsExpectedValue
+LOCAL lcExpected
+lcExpected = "Tue, 19 Nov 2019 12:00:00 +0600"
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, +6), ;
+						 "GetRFC2822() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetRFC2822_DateWithPositiveTwelveNumericOffset_ReturnsExpectedValue
+LOCAL lcExpected
+lcExpected = "Tue, 19 Nov 2019 12:00:00 +1200"
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, +12), ;
+						 "GetRFC2822() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetRFC2822_DateWithPositiveNumericNoSignOffset_ReturnsExpectedValue
+LOCAL lcExpected
+lcExpected = "Tue, 19 Nov 2019 12:00:00 +0600"
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, 6), ;
+						 "GetRFC2822() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetRFC2822_DateWith15MinuteOffset_ReturnsExpectedValue
+LOCAL lcExpected
+lcExpected = "Tue, 19 Nov 2019 12:00:00 +1000"  && not supported, no time zones use 15 minute offset
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, 10.25), ;
+						 "GetRFC2822() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetRFC2822_DateWith30MinuteOffset_ReturnsExpectedValue
+LOCAL lcExpected
+lcExpected = "Tue, 19 Nov 2019 12:00:00 +1030"
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, 10.5), ;
+						 "GetRFC2822() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetRFC2822_DateWith45MinuteOffset_ReturnsExpectedValue
+LOCAL lcExpected
+lcExpected = "Tue, 19 Nov 2019 12:00:00 +0845"
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19}, 8.75), ;
 						 "GetRFC2822() did not return the expected value")
 ENDFUNC
 
@@ -1796,8 +1880,8 @@ ENDFUNC
 
 FUNCTION TestGetRFC2822_DateWithOffset_ReturnsExpectedValue
 LOCAL lcExpected
-lcExpected = "Tue, 19 Nov 2019 17:11:00 -6000"
-This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19 17:11:00}, "-6000"), ;
+lcExpected = "Tue, 19 Nov 2019 17:11:00 -0600"
+This.AssertEquals( lcExpected, this.ioObjectToBeTested.GetRFC2822( {^2019-11-19 17:11:00}, "-0600"), ;
 						 "GetRFC2822() did not return the expected value")
 ENDFUNC
 
