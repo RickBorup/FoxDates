@@ -23,6 +23,7 @@ oFoxDates.GetLastOfMonth( {^2020-02-01})  && returns 02/29/2020 (is a leap year)
 [GetDaysInMonth](#GetDaysInMonth)  
 [GetLastEOM](#GetLastEOM)  
 [GetBOQ](#GetBOQ)  
+[GetLastBOQ](#GetLastBOQ)  
 [GetEOQ](#GetEOQ)  
 [GetLastEOQ](#GetLastEOQ)  
 [GetLastEOY](#GetLastEOY)  
@@ -50,15 +51,19 @@ oFoxDates.GetLastOfMonth( {^2020-02-01})  && returns 02/29/2020 (is a leap year)
 ## Date Functions <a name="DateFunctions"></a>
 
 ### GetFirstOfMonth() <a name="GetFirstOfMonth"></a>
-Pass a date, get back the first day of that month.   
+Pass a date, get back the date of the first day of that month. 
+If a datetime is passed, the time portion of the return value is 00:00:00.
 ```foxpro
-oFoxDates.GetFirstOfMonth( {^2019-11-19})    && returns 11/01/2019
+oFoxDates.GetFirstOfMonth( {^2019-11-19})          && returns 11/01/2019
+oFoxDates.GetFirstOfMonth( {^2019-11-19 12:34:56}) && returns 11/01/2019 00:00:00
 ```
 
 ### GetLastOfMonth() <a name="GetLastOfMonth"></a>
-Pass a date, get back the last day of that month.
+Pass a date, get back the date of the last day of that month.
+If a datetime is passed, the time portion of the return value is 23:59:59.
 ```foxpro
-oFoxDates.GetLastOfMonth( {^2019-11-19})    && returns 11/30/2019
+oFoxDates.GetLastOfMonth( {^2019-11-19})          && returns 11/30/2019
+oFoxDates.GetLastOfMonth( {^2019-11-19 12:34:56}) && returns 11/30/2019 23:59:59
 ```
 
 ### GetDaysInMonth() <a name="GetDaysInMonth"></a>
@@ -68,45 +73,67 @@ oFoxDates.GetDaysInMonth( {^2019-11-19})    && returns 30
 ```
 
 ### GetLastEOM() <a name="GetLastEOM"></a>
-Pass a date, get back the last day of the previous month.
+Pass a date, get back the ending date of the previous month.
+If a datetime is passed, the time portion of the return value is 23:59:59.
 ```foxpro
-oFoxDates.GetLastEOM( {^2019-11-19})    && returns 10/31/2019
+oFoxDates.GetLastEOM( {^2019-11-19})          && returns 10/31/2019
+oFoxDates.GetLastEOM( {^2019-11-19 12:34:56}) && returns 10/31/2019 23:59:59
 ```
 
 ### GetBOQ() <a name="GetBOQ"></a>
-Pass a date, get back the first day of the calendar quarter.
+Pass a date, get back the beginning date of the current calendar quarter.
+If a datetime is passed, the time portion of the return value is 00:00:00.
 ```foxpro
-oFoxDates.GetBOQ( {^2019-11-19})    && returns 10/01/2019
+oFoxDates.GetBOQ( {^2019-11-19})          && returns 10/01/2019
+oFoxDates.GetBOQ( {^2019-11-19 12:34:56}) && returns 10/01/2019 00:00:00
+```
+
+### GetLastBOQ() <a name="GetLastBOQ"></a>
+Pass a date, get back the beginning date of the previous calendar quarter.
+If a datetime is passed, the time portion of the return value is 00:00:00.
+```foxpro
+oFoxDates.GetLastBOQ( {^2019-11-19})          && returns 07/01/2019
+oFoxDates.GetLastBOQ( {^2019-11-19 12:34:56}) && returns 07/01/2019 00:00:00
 ```
 
 ### GetEOQ() <a name="GetEOQ"></a>
-Pass a date, get back the last date of the calendar quarter.
+Pass a date, get back the ending date of the current calendar quarter.
+If a datetime is passed, the time portion of the return value is 23:59:59.
 ```foxpro
-oFoxDates.GetEOQ( {^2019-11-19})    && returns 12/31/2019
+oFoxDates.GetEOQ( {^2019-11-19})          && returns 12/31/2019
+oFoxDates.GetEOQ( {^2019-11-19 12:45:56}) && returns 12/31/2019 23:59:59
 ```
 
 ### GetLastEOQ() <a name="GetLastEOQ"></a>
-Pass a date, get back the date of the preceding end of quarter.
+Pass a date, get back the ending date of the previous calendar quarter.
+If a datetime is passed, the time portion of the return value is 23:59:59.
 ```foxpro
-oFoxDates.GetLastEOQ( {^2019-11-19})    && returns 09/30/2019
+oFoxDates.GetLastEOQ( {^2019-11-19})          && returns 09/30/2019
+oFoxDates.GetLastEOQ( {^2019-11-19 12:34:56}) && returns 09/30/2019 23:59:59
 ```
 
 ### GetLastEOY() <a name="GetLastEOY"></a>
-Pass a date, get back the date of the preceding end of year.
+Pass a date, get back the ending date of the previous year.
+If a datetime is passed, the time portion of the return value is 23:59:59.
 ```foxpro
-oFoxDates.GetLastEOY( {^2019-11-19})    && returns 12/31/2018
+oFoxDates.GetLastEOY( {^2019-11-19})          && returns 12/31/2018
+oFoxDates.GetLastEOY( {^2019-11-19 12:34:56}) && returns 12/31/2018 23:59:59
 ```
 
 ### GetLastMonday() <a name="GetLastMonday"></a>
 Pass a date, get back the date of the preceding Monday.
+If a datetime is passed, the time is preserved - i.e., 'same time last Monday'.
 ```foxpro
-oFoxDates.GetLastMonday( {^2019-11-19})    && returns 11/18/2019
+oFoxDates.GetLastMonday( {^2019-11-19})          && returns 11/18/2019
+oFoxDates.GetLastMonday( {^2019-11-19 12:34:56}) && returns 11/18/2019 12:34:56
 ```
 
 ### GetNextMonday() <a name="GetNextMonday"></a>
 Pass a date, get back the date of the next Monday.
+If a datetime is passed, the time is preserved - i.e., 'same time next Monday'.
 ```foxpro
-oFoxDates.GetNextMonday( {^2019-11-19})    && returns 11/25/2019
+oFoxDates.GetNextMonday( {^2019-11-19})          && returns 11/25/2019
+oFoxDates.GetNextMonday( {^2019-11-19 12:34:56}) && returns 11/25/2019 12:34:56
 ```
 
 ### GetDateFromString() <a name="GetDateFromString"></a>
