@@ -164,9 +164,10 @@ DEFINE CLASS foxdates_tests as FxuTestCase OF FxuTestCase.prg
 *!*		RETURN This.AssertNotImplemented()
 *!*		ENDFUNC
 
+#DEFINE dc_nSecondsInADay 86400 && for when it's necessary to add or subtract days from a datetime
 
 *---------------------------------------------------------------------
-*	Tests for GetFirstOFMonth()
+*	Tests for GetFirstOFMonth() when parameter is a date
 *---------------------------------------------------------------------
 FUNCTION TestGetFirstOfMonth_NoInput_ReturnsBOMofCurrentDate
 LOCAL ldToday, ldExpected
@@ -201,7 +202,42 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetFirstOfMonth( DATE()),
 ENDFUNC
 
 *---------------------------------------------------------------------
-*	Tests for GetLastOFMonth()
+*	Tests for GetFirstOFMonth() when parameter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestGetFirstOfMonth_NoInput_DateTime_ReturnsBOMofCurrentDate
+LOCAL ldToday, ldExpected
+ldToday = DATETIME()
+ldExpected = DATE( YEAR( ldToday), MONTH( ldToday), 1) && default is datatype 'date' if no input
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetFirstOfMonth(), ;
+						 "GetFirstOfMonth() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetFirstOfMonth_BadInput_DateTime_ReturnsBOMofCurrentDate
+LOCAL ldToday, ldExpected
+ldToday = DATETIME()
+ldExpected = DATE( YEAR( ldToday), MONTH( ldToday), 1) && default is datatype 'date' if invalid input
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetFirstOfMonth( .F.), ;
+						 "GetFirstOfMonth() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetFirstOfMonth_EmptyDate_DateTime_ReturnsBOMofCurrentDate
+LOCAL ldToday, ldExpected
+ldToday = DATETIME()
+ldExpected = DATETIME( YEAR( ldToday), MONTH( ldToday), 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetFirstOfMonth( { :}), ;
+						 "GetFirstOfMonth() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetFirstOfMonth_TodaysDate_DateTime_ReturnsBOMofCurrentDate
+LOCAL ldToday, ldExpected
+ldToday = DATETIME()
+ldExpected = DATETIME( YEAR( ldToday), MONTH( ldToday), 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetFirstOfMonth( DATETIME()), ;
+						 "GetFirstOfMonth() did not return the expected date")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetLastOFMonth() when paramter is a date
 *---------------------------------------------------------------------
 FUNCTION TestGetLastOFMonth_NoInput_ReturnsEOMofCurrentDate
 LOCAL ldToday, lnLastDay
@@ -280,7 +316,86 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastOFMonth( {^2020-02
 ENDFUNC
 
 *---------------------------------------------------------------------
-*	Tests for GetDaysInMonth()
+*	Tests for GetLastOFMonth() when paramter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestGetLastOFMonth_NoInput_DateTime_ReturnsEOMofCurrentDate
+LOCAL ldToday, lnLastDay
+ldToday = DATETIME()
+lnLastDay = ICASE( INLIST( MONTH( ldToday), 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( MONTH( ldToday), 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+LOCAL ldExpected
+ldExpected = DATE( YEAR( ldToday), MONTH( ldToday), lnLastDay) && default is datatype 'date' if no input
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastOFMonth(), ;
+						 "GetLastOFMonth() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastOFMonth_BadInput_DateTime_ReturnsEOMofCurrentDate
+LOCAL ldToday, lnLastDay
+ldToday = DATETIME()
+lnLastDay = ICASE( INLIST( MONTH( ldToday), 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( MONTH( ldToday), 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+LOCAL ldExpected
+ldExpected = DATE( YEAR( ldToday), MONTH( ldToday), lnLastDay) && default is datatype 'date' if input is invalid
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastOFMonth( .F.), ;
+						 "GetLastOFMonth() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastOFMonth_EmptyDate_DateTime_ReturnsEOMofCurrentDate
+LOCAL ldToday, lnLastDay
+ldToday = DATETIME()
+lnLastDay = ICASE( INLIST( MONTH( ldToday), 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( MONTH( ldToday), 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+LOCAL ldExpected
+ldExpected = DATETIME( YEAR( ldToday), MONTH( ldToday), lnLastDay) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastOFMonth( { :}), ;
+						 "GetLastOFMonth() did not return the expected datetime")
+ENDFUNC
+
+FUNCTION TestGetLastOFMonth_TodaysDate_DateTime_ReturnsEOMofCurrentDate
+LOCAL ldToday, lnLastDay
+ldToday = DATETIME()
+lnLastDay = ICASE( INLIST( MONTH( ldToday), 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( MONTH( ldToday), 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+LOCAL ldExpected
+ldExpected = DATETIME( YEAR( ldToday), MONTH( ldToday), lnLastDay) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastOFMonth( ldToday), ;
+						 "GetLastOFMonth() did not return the expected datetime")
+ENDFUNC
+
+FUNCTION TestGetLastOFMonth_JanuaryDate_DateTime_ReturnsTheThirtyFirst
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-01-31}) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastOFMonth( DTOT( {^2019-01-01})), ;
+						 "GetLastOFMonth() did not return the expected datetime")
+ENDFUNC
+
+FUNCTION TestGetLastOFMonth_AprilDate_DateTime_ReturnsTheThirtieth
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-04-30}) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastOFMonth( DTOT( {^2019-04-01})), ;
+						 "GetLastOFMonth() did not return the expected datetime")
+ENDFUNC
+
+FUNCTION TestGetLastOFMonth_FebruaryNotLeapYear_DateTime_ReturnsTheTwentyEighth
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-02-28}) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastOFMonth( DTOT( {^2019-02-01})), ;
+						 "GetLastOFMonth() did not return the expected datetime")
+ENDFUNC
+
+FUNCTION TestGetLastOFMonth_FebruaryLeapYear_DateTime_ReturnsTheTwentyNinth
+LOCAL ldExpected
+ldExpected = DTOT( {^2020-02-29}) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastOFMonth( DTOT( {^2020-02-01})), ;
+						 "GetLastOFMonth() did not return the expected datetime")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetDaysInMonth() when parameter is a date
 *---------------------------------------------------------------------
 FUNCTION TestGetDaysInMonth_NoInput_ReturnsDaysInCurrentMonth
 LOCAL ldToday, lnExpected
@@ -417,7 +532,144 @@ This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( {^2019-12
 ENDFUNC
 
 *---------------------------------------------------------------------
-*	Tests for GetLastEOM()
+*	Tests for GetDaysInMonth() when parameter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestGetDaysInMonth_NoInput_DateTime_ReturnsDaysInCurrentMonth
+LOCAL ldToday, lnExpected
+ldToday = DATETIME()
+lnExpected = ICASE( INLIST( MONTH( ldToday), 1, 3, 5, 7, 8, 10, 12), 31, ;
+						  MONTH( ldToday) = 2, IIF( this.IsLeapYear( YEAR( ldToday)), 29, 28), ;
+						  30)
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth(), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+FUNCTION TestGetDaysInMonth_BadInput_DateTime_ReturnsDaysInCurrentMonth
+LOCAL ldToday, lnExpected
+ldToday = DATETIME()
+lnExpected = ICASE( INLIST( MONTH( ldToday), 1, 3, 5, 7, 8, 10, 12), 31, ;
+						  MONTH( ldToday) = 2, IIF( this.IsLeapYear( YEAR( ldToday)), 29, 28), ;
+						  30)
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( .F.), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+FUNCTION TestGetDaysInMonth_EmptyDate_DateTime_ReturnsDaysInCurrentMonth
+LOCAL ldToday, lnExpected
+ldToday = DATETIME()
+lnExpected = ICASE( INLIST( MONTH( ldToday), 1, 3, 5, 7, 8, 10, 12), 31, ;
+						  MONTH( ldToday) = 2, IIF( this.IsLeapYear( YEAR( ldToday)), 29, 28), ;
+						  30)
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( { :}), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	January
+FUNCTION TestGetDaysInMonth_January_DateTime_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( DTOT( {^2019-01-01})), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	February (not a leap year)
+FUNCTION TestGetDaysInMonth_FebruaryNotLeapYear_DateTime_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 28
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( DTOT( {^2019-02-01})), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	February (leap year)
+FUNCTION TestGetDaysInMonth_FebruaryLeapYear_DateTime_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 29
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( DTOT( {^2020-02-01})), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	March
+FUNCTION TestGetDaysInMonth_March_DateTime_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( DTOT( {^2019-03-01})), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	April
+FUNCTION TestGetDaysInMonth_April_DateTime_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 30
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( DTOT( {^2019-04-01})), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	May
+FUNCTION TestGetDaysInMonth_May_DateTime_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( DTOT( {^2019-05-01})), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	June
+FUNCTION TestGetDaysInMonth_June_DateTime_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 30
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( DTOT( {^2019-06-01})), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	July
+FUNCTION TestGetDaysInMonth_July_DateTime_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( DTOT( {^2019-07-01})), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	August
+FUNCTION TestGetDaysInMonth_August_DateTime_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( DTOT( {^2019-08-01})), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	September
+FUNCTION TestGetDaysInMonth_September_DateTime_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 30
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( DTOT( {^2019-09-01})), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	October
+FUNCTION TestGetDaysInMonth_October_DateTime_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( DTOT( {^2019-10-01})), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	November
+FUNCTION TestGetDaysInMonth_November_DateTime_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 30
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( DTOT( {^2019-11-01})), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*	December
+FUNCTION TestGetDaysInMonth_December_DateTime_ReturnsDaysInCurrentMonth
+LOCAL lnExpected
+lnExpected = 31
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetDaysInMonth( DTOT( {^2019-12-01})), ;
+						 "GetLastOFMonth() did not return the expected values")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetLastEOM() when parameter is a date
 *---------------------------------------------------------------------
 FUNCTION TestGetLastEOM_NoInput_ReturnsEOMofLastMonth
 LOCAL ldToday, ldExpected, lnYear, lnMonth, lnLastDay
@@ -472,7 +724,62 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOM( ldToday), ;
 ENDFUNC
 
 *---------------------------------------------------------------------
-*	Tests for GetBOQ()
+*	Tests for GetLastEOM() when parameter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestGetLastEOM_NoInput_DateTime_ReturnsEOMofLastMonth
+LOCAL ldToday, ldExpected, lnYear, lnMonth, lnLastDay
+ldToday = DATETIME()
+lnYear = IIF( MONTH( ldToday) = 1, YEAR( ldToday) - 1, YEAR( ldToday))
+lnMonth = IIF( MONTH( ldToday) = 1, 12, MONTH( ldToday) - 1)
+lnLastDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+ldExpected = DATE( lnYear, lnMonth, lnLastDay)  && default is datatype 'date' if no input
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOM(), ;
+						 "GetLastEOM() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastEOM_BadInput_DateTime_ReturnsEOMofLastMonth
+LOCAL ldToday, ldExpected, lnYear, lnMonth, lnLastDay
+ldToday = DATETIME()
+lnYear = IIF( MONTH( ldToday) = 1, YEAR( ldToday) - 1, YEAR( ldToday))
+lnMonth = IIF( MONTH( ldToday) = 1, 12, MONTH( ldToday) - 1)
+lnLastDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+ldExpected = DATE( lnYear, lnMonth, lnLastDay) && default is datatype 'date' if input is invalid
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOM( .F.), ;
+						 "GetLastEOM() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastEOM_EmptyDate_DateTime_ReturnsEOMofLastMonth
+LOCAL ldToday, ldExpected, lnYear, lnMonth, lnLastDay
+ldToday = DATETIME()
+lnYear = IIF( MONTH( ldToday) = 1, YEAR( ldToday) - 1, YEAR( ldToday))
+lnMonth = IIF( MONTH( ldToday) = 1, 12, MONTH( ldToday) - 1)
+lnLastDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+ldExpected = DATETIME( lnYear, lnMonth, lnLastDay) + ( dc_nSecondsInADay - 1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOM( { :}), ;
+						 "GetLastEOM() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastEOM_TodaysDate_DateTime_ReturnsEOMofLastMonth
+LOCAL ldToday, ldExpected, lnYear, lnMonth, lnLastDay
+ldToday = DATETIME()
+lnYear = IIF( MONTH( ldToday) = 1, YEAR( ldToday) - 1, YEAR( ldToday))
+lnMonth = IIF( MONTH( ldToday) = 1, 12, MONTH( ldToday) - 1)
+lnLastDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+ldExpected = DATETIME( lnYear, lnMonth, lnLastDay) + ( dc_nSecondsInADay - 1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOM( ldToday), ;
+						 "GetLastEOM() did not return the expected date")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetBOQ() when parameter is a date
 *---------------------------------------------------------------------
 FUNCTION TestGetBOQ_NoInput_ReturnsBOQofCurrentDate
 LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate
@@ -673,7 +980,610 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetBOQ( ldDate), ;
 ENDFUNC
 
 *---------------------------------------------------------------------
-*	Tests for GetEOQ()
+*	Tests for GetBOQ() when parameter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestGetBOQ_NoInput_DateTime_ReturnsBOQofCurrentDate
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 1, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 4, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 7, ;
+					  10)
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay) && default is datatype 'date' if no input
+This.AssertEquals( ldDate, this.ioObjectToBeTested.GetBOQ(), ;
+						 "GetBOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetBOQ_BadInput_DateTime_ReturnsBOQofCurrentDate
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 1, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 4, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 7, ;
+					  10)
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay) && default is datatype 'date' if input is invalid
+This.AssertEquals( ldDate, this.ioObjectToBeTested.GetBOQ( .F.), ;
+						 "GetBOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetBOQ_EmptyDate_DateTime_ReturnsBOQofCurrentDate
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 1, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 4, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 7, ;
+					  10)
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+This.AssertEquals( ldDate, this.ioObjectToBeTested.GetBOQ( { :}), ;
+						 "GetBOQ() did not return the expected date")
+ENDFUNC
+
+*	January
+FUNCTION TestGetBOQ_Jan1_DateTime_ReturnsJan1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 1
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 1, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetBOQ( ldDate), ;
+						 "GetBOQ(Jan1) did not return January 1")
+ENDFUNC
+
+*	February
+FUNCTION TestGetBOQ_Feb1_DateTime_ReturnsJan1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 2
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 1, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetBOQ( ldDate), ;
+						 "GetBOQ(Feb1) did not return January 1")
+ENDFUNC
+
+*	March
+FUNCTION TestGetBOQ_Mar1_DateTime_ReturnsJan1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 3
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 1, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetBOQ( ldDate), ;
+						 "GetBOQ(Mar1) did not return January 1")
+ENDFUNC
+
+*	April
+FUNCTION TestGetBOQ_Apr1_DateTime_ReturnsApr1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 4
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 4, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetBOQ( ldDate), ;
+						 "GetBOQ(Apr1) did not return April 1")
+ENDFUNC
+
+*	May
+FUNCTION TestGetBOQ_May1_DateTime_ReturnsApr1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 5
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 4, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetBOQ( ldDate), ;
+						 "GetBOQ(May1) did not return April 1")
+ENDFUNC
+
+*	June
+FUNCTION TestGetBOQ_Jun1_DateTime_ReturnsApr1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 6
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 4, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetBOQ( ldDate), ;
+						 "GetBOQ(Jun1) did not return April 1")
+ENDFUNC
+
+*	July
+FUNCTION TestGetBOQ_Jul1_DateTime_ReturnsJul1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 7
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 7, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetBOQ( ldDate), ;
+						 "GetBOQ(Jul1) did not return July 1")
+ENDFUNC
+
+*	August
+FUNCTION TestGetBOQ_Aug1_DateTime_ReturnsJul1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 8
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 7, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetBOQ( ldDate), ;
+						 "GetBOQ(Aug1) did not return July 1")
+ENDFUNC
+
+*	September
+FUNCTION TestGetBOQ_Sep1_DateTime_ReturnsJul1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 9
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 7, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetBOQ( ldDate), ;
+						 "GetBOQ(Sep1) did not return July 1")
+ENDFUNC
+
+*	October
+FUNCTION TestGetBOQ_Oct1_DateTime_ReturnsOct1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 10
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 10, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetBOQ( ldDate), ;
+						 "GetBOQ(Oct1) did not return October 1")
+ENDFUNC
+
+*	November
+FUNCTION TestGetBOQ_Nov1_DateTime_ReturnsOct1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 11
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 10, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetBOQ( ldDate), ;
+						 "GetBOQ(Nov1) did not return October 1")
+ENDFUNC
+
+*	December
+FUNCTION TestGetBOQ_Dec1_DateTime_ReturnsOct1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 12
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 10, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetBOQ( ldDate), ;
+						 "GetBOQ(Dec1) did not return October 1")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetLastBOQ() when parameter is a date
+*---------------------------------------------------------------------
+FUNCTION TestGetLastBOQ_NoInput_ReturnsBOQofPreviousQuarter
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate
+ldToday = DATE()
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 10, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 1, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 4, ;
+					  7)
+lnYear = IIF( lnMonth = 10, YEAR( ldToday) - 1, YEAR( ldToday))
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+This.AssertEquals( ldDate, this.ioObjectToBeTested.GetLastBOQ(), ;
+						 "GetLastBOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastBOQ_BadInput_ReturnsBOQofPreviousQuarter
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate
+ldToday = DATE()
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 10, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 1, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 4, ;
+					  7)
+lnYear = IIF( lnMonth = 10, YEAR( ldToday) - 1, YEAR( ldToday))
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+This.AssertEquals( ldDate, this.ioObjectToBeTested.GetLastBOQ( .F.), ;
+						 "GetLastBOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastBOQ_EmptyDate_ReturnsBOQofPreviousQuarter
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate
+ldToday = DATE()
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 10, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 1, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 4, ;
+					  7)
+lnYear = IIF( lnMonth = 10, YEAR( ldToday) - 1, YEAR( ldToday))
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+This.AssertEquals( ldDate, this.ioObjectToBeTested.GetLastBOQ( {}), ;
+						 "GetLastBOQ() did not return the expected date")
+ENDFUNC
+
+*	January
+FUNCTION TestGetLastBOQ_Jan1_ReturnsOct1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = 1
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+ldExpected = DATE( lnYear - 1, 10, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Jan1) did not return October 1")
+ENDFUNC
+
+*	February
+FUNCTION TestGetLastBOQ_Feb1_ReturnsOct1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = 2
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+ldExpected = DATE( lnYear - 1, 10, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Feb1) did not return October 1")
+ENDFUNC
+
+*	March
+FUNCTION TestGetLastBOQ_Mar1_ReturnsOct1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = 3
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+ldExpected = DATE( lnYear - 1, 10, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Mar1) did not return October 1")
+ENDFUNC
+
+*	April
+FUNCTION TestGetLastBOQ_Apr1_ReturnsJan1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = 4
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+ldExpected = DATE( lnYear, 1, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Apr1) did not return January 1")
+ENDFUNC
+
+*	May
+FUNCTION TestGetLastBOQ_May1_ReturnsJan1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = 5
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+ldExpected = DATE( lnYear, 1, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(May1) did not return January 1")
+ENDFUNC
+
+*	June
+FUNCTION TestGetLastBOQ_Jun1_ReturnsJan1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = 6
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+ldExpected = DATE( lnYear, 1, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Jun1) did not return January 1")
+ENDFUNC
+
+*	July
+FUNCTION TestGetLastBOQ_Jul1_ReturnsApr1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = 7
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+ldExpected = DATE( lnYear, 4, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Jul1) did not return April 1")
+ENDFUNC
+
+*	August
+FUNCTION TestGetLastBOQ_Aug1_ReturnsApr1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = 8
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+ldExpected = DATE( lnYear, 4, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Aug1) did not return April 1")
+ENDFUNC
+
+*	September
+FUNCTION TestGetLastBOQ_Sep1_ReturnsApr1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = 9
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+ldExpected = DATE( lnYear, 4, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Sep1) did not return April 1")
+ENDFUNC
+
+*	October
+FUNCTION TestGetLastBOQ_Oct1_ReturnsJul1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = 10
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+ldExpected = DATE( lnYear, 7, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Oct1) did not return July 1")
+ENDFUNC
+
+*	November
+FUNCTION TestGetLastBOQ_Nov1_ReturnsJul1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = 11
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+ldExpected = DATE( lnYear, 7, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Nov1) did not return July 1")
+ENDFUNC
+
+*	December
+FUNCTION TestGetLastBOQ_Dec1_ReturnsJul1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATE()
+lnYear = YEAR( ldToday)
+lnMonth = 12
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay)
+ldExpected = DATE( lnYear, 7, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Dec1) did not return July 1")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetLastBOQ() when parameter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestGetLastBOQ_NoInput_DateTime_ReturnsBOQofPreviousQuarter
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate
+ldToday = DATETIME()
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 10, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 1, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 4, ;
+					  7)
+lnYear = IIF( lnMonth = 10, YEAR( ldToday) - 1, YEAR( ldToday))
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay) && default is datatype 'date' if no input
+This.AssertEquals( ldDate, this.ioObjectToBeTested.GetLastBOQ(), ;
+						 "GetLastBOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastBOQ_BadInput_DateTime_ReturnsBOQofPreviousQuarter
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate
+ldToday = DATETIME()
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 10, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 1, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 4, ;
+					  7)
+lnYear = IIF( lnMonth = 10, YEAR( ldToday) - 1, YEAR( ldToday))
+lnDay = 1
+ldDate = DATE( lnYear, lnMonth, lnDay) && default is datatype 'date' if input is invalid
+This.AssertEquals( ldDate, this.ioObjectToBeTested.GetLastBOQ( .F.), ;
+						 "GetLastBOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastBOQ_EmptyDate_DateTime_ReturnsBOQofPreviousQuarter
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate
+ldToday = DATETIME()
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 10, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 1, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 4, ;
+					  7)
+lnYear = IIF( lnMonth = 10, YEAR( ldToday) - 1, YEAR( ldToday))
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+This.AssertEquals( ldDate, this.ioObjectToBeTested.GetLastBOQ( { :}), ;
+						 "GetLastBOQ() did not return the expected date")
+ENDFUNC
+
+*	January
+FUNCTION TestGetLastBOQ_Jan1_DateTime_ReturnsOct1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 1
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear - 1, 10, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Jan1) did not return October 1")
+ENDFUNC
+
+*	February
+FUNCTION TestGetLastBOQ_Feb1_DateTime_ReturnsOct1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 2
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear - 1, 10, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Feb1) did not return January 1")
+ENDFUNC
+
+*	March
+FUNCTION TestGetLastBOQ_Mar1_DateTime_ReturnsOct1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 3
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear - 1, 10, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Mar1) did not return October 1")
+ENDFUNC
+
+*	April
+FUNCTION TestGetLastBOQ_Apr1_DateTime_ReturnsJan1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 4
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 1, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Apr1) did not return January 1")
+ENDFUNC
+
+*	May
+FUNCTION TestGetLastBOQ_May1_DateTime_ReturnsJan1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 5
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 1, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(May1) did not return January 1")
+ENDFUNC
+
+*	June
+FUNCTION TestGetLastBOQ_Jun1_DateTime_ReturnsJan1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 6
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 1, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Jun1) did not return January 1")
+ENDFUNC
+
+*	July
+FUNCTION TestGetLastBOQ_Jul1_DateTime_ReturnsApr1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 7
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 4, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Jul1) did not return April 1")
+ENDFUNC
+
+*	August
+FUNCTION TestGetLastBOQ_Aug1_DateTime_ReturnsApr1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 8
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 4, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Aug1) did not return April 1")
+ENDFUNC
+
+*	September
+FUNCTION TestGetLastBOQ_Sep1_DateTime_ReturnsApr1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 9
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 4, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Sep1) did not return April 1")
+ENDFUNC
+
+*	October
+FUNCTION TestGetLastBOQ_Oct1_DateTime_ReturnsJul1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 10
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 7, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Oct1) did not return July 1")
+ENDFUNC
+
+*	November
+FUNCTION TestGetLastBOQ_Nov1_DateTime_ReturnsJul1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 11
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 7, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Nov1) did not return July 1")
+ENDFUNC
+
+*	December
+FUNCTION TestGetLastBOQ_Dec1_DateTime_ReturnsJul1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 12
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 7, 1)
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastBOQ( ldDate), ;
+						 "GetLastBOQ(Dec1) did not return July 1")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetEOQ() when parameter is a date
 *---------------------------------------------------------------------
 FUNCTION TestGetEOQ_NoInput_ReturnsEOQofCurrentDate
 LOCAL ldToday, lnYear, lnMonth, lnDay, ldExpected
@@ -880,7 +1790,214 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( ldDate), ;
 ENDFUNC
 
 *---------------------------------------------------------------------
-*	Tests for GetLastEOQ()
+*	Tests for GetEOQ() when parameter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestGetEOQ_NoInput_DateTime_ReturnsEOQofCurrentDate
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 3, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 6, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 9, ;
+					  12)
+lnDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+					INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+					28)	&& change to 29 if testing in a leap year
+ldExpected = DATE( lnYear, lnMonth, lnDay) && default is datatype 'date' if no input
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ(), ;
+						 "GetEOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetEOQ_BadInput_DateTime_ReturnsEOQofCurrentDate
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 3, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 6, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 9, ;
+					  12)
+lnDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+					INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+					28)	&& change to 29 if testing in a leap year
+ldExpected = DATE( lnYear, lnMonth, lnDay) && default is datatype 'date' if input is invalid
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( .F.), ;
+						 "GetEOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetEOQ_EmptyDate_DateTime_ReturnsEOQofCurrentDate
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = ICASE( INLIST( MONTH( ldToday), 1, 2, 3), 3, ;
+					  INLIST( MONTH( ldToday), 4, 5, 6), 6, ;
+					  INLIST( MONTH( ldToday), 7, 8, 9), 9, ;
+					  12)
+lnDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+					INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+					28)	&& change to 29 if testing in a leap year
+ldExpected = DATETIME( lnYear, lnMonth, lnDay) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( { :}), ;
+						 "GetEOQ() did not return the expected date")
+ENDFUNC
+
+*	January
+FUNCTION TestGetEOQ_Jan1_DateTime_ReturnsMarch31
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 1
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 3, 31) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( ldDate), ;
+						 "GetEOQ(Jan1) did not return March 31")
+ENDFUNC
+
+*	February
+FUNCTION TestGetEOQ_Feb1_DateTime_ReturnsMarch31
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 2
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 3, 31) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( ldDate), ;
+						 "GetEOQ(Feb1) did not return March 31")
+ENDFUNC
+
+*	March
+FUNCTION TestGetEOQ_Mar1_DateTime_ReturnsMarch31
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 3
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 3, 31) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( ldDate), ;
+						 "GetEOQ(Mar1) did not return March 31")
+ENDFUNC
+
+*	April
+FUNCTION TestGetEOQ_Apr1_DateTime_ReturnsJune30
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 4
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 6, 30) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( ldDate), ;
+						 "GetEOQ(Apr1) did not return April 30")
+ENDFUNC
+
+*	May
+FUNCTION TestGetEOQ_May1_DateTime_ReturnsJune1
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 5
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 6, 30) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( ldDate), ;
+						 "GetEOQ(May1) did not return June 30")
+ENDFUNC
+
+*	June
+FUNCTION TestGetEOQ_Jun1_DateTime_ReturnsJune30
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 6
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 6, 30) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( ldDate), ;
+						 "GetEOQ(Jun1) did not return June 30")
+ENDFUNC
+
+*	July
+FUNCTION TestGetEOQ_Jul1_DateTime_ReturnsSept30
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 7
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 9, 30) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( ldDate), ;
+						 "GetEOQ(Jul1) did not return September 30")
+ENDFUNC
+
+*	August
+FUNCTION TestGetEOQ_Aug1_DateTime_ReturnsSept30
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 8
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 9, 30) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( ldDate), ;
+						 "GetEOQ(Aug1) did not return September 30")
+ENDFUNC
+
+*	September
+FUNCTION TestGetEOQ_Sep1_DateTime_ReturnsSept30
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 9
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 9, 30) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( ldDate), ;
+						 "GetEOQ(Sep1) did not return September 30")
+ENDFUNC
+
+*	October
+FUNCTION TestGetEOQ_Oct1_DateTime_ReturnsDec31
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 10
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 12, 31) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( ldDate), ;
+						 "GetEOQ(Oct1) did not return December 31")
+ENDFUNC
+
+*	November
+FUNCTION TestGetEOQ_Nov1_DateTime_ReturnsDec31
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 11
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 12, 31) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( ldDate), ;
+						 "GetEOQ(Nov1) did not return December 31")
+ENDFUNC
+
+*	December
+FUNCTION TestGetEOQ_Dec1_DateTime_ReturnsDec31
+LOCAL ldToday, lnYear, lnMonth, lnDay, ldDate, ldExpected
+ldToday = DATETIME()
+lnYear = YEAR( ldToday)
+lnMonth = 12
+lnDay = 1
+ldDate = DATETIME( lnYear, lnMonth, lnDay)
+ldExpected = DATETIME( lnYear, 12, 31) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetEOQ( ldDate), ;
+						 "GetEOQ(Dec1) did not return December 31")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetLastEOQ() when parameter is a date
 *---------------------------------------------------------------------
 FUNCTION TestGetLastEOQ_NoInput_ReturnsEOQofLastQuarter
 LOCAL ldToday, ldExpected, lnYear, lnMonth, lnLastDay
@@ -947,7 +2064,74 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOQ( ldToday), ;
 ENDFUNC
 
 *---------------------------------------------------------------------
-*	Tests for GetLastEOY()
+*	Tests for GetLastEOQ() when parameter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestGetLastEOQ_NoInput_DateTime_ReturnsEOQofLastQuarter
+LOCAL ldToday, ldExpected, lnYear, lnMonth, lnLastDay
+ldToday = DATETIME()
+lnYear = IIF( MONTH( ldToday) = 1, YEAR( ldToday) - 1, YEAR( ldToday))
+lnMonth = ICASE( BETWEEN( MONTH( ldToday), 1, 3), 12, ;
+					  BETWEEN( MONTH( ldToday), 4, 6), 3, ;
+					  BETWEEN( MONTH( ldToday), 7, 9), 6, ;
+					  9)
+lnLastDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+ldExpected = DATE( lnYear, lnMonth, lnLastDay) && default is datatype 'date' if no input
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOQ(), ;
+						 "GetLastEOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastEOQ_BadInput_DateTime_ReturnsEOQofLastQuarter
+LOCAL ldToday, ldExpected, lnYear, lnMonth, lnLastDay
+ldToday = DATETIME()
+lnYear = IIF( MONTH( ldToday) = 1, YEAR( ldToday) - 1, YEAR( ldToday))
+lnMonth = ICASE( BETWEEN( MONTH( ldToday), 1, 3), 12, ;
+					  BETWEEN( MONTH( ldToday), 4, 6), 3, ;
+					  BETWEEN( MONTH( ldToday), 7, 9), 6, ;
+					  9)
+lnLastDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+ldExpected = DATE( lnYear, lnMonth, lnLastDay) && default is datatype 'date' if input is invalid
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOQ( .F.), ;
+						 "GetLastEOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastEOQ_EmptyDate_DateTime_ReturnsEOQofLastQuarter
+LOCAL ldToday, ldExpected, lnYear, lnMonth, lnLastDay
+ldToday = DATETIME()
+lnYear = IIF( MONTH( ldToday) = 1, YEAR( ldToday) - 1, YEAR( ldToday))
+lnMonth = ICASE( BETWEEN( MONTH( ldToday), 1, 3), 12, ;
+					  BETWEEN( MONTH( ldToday), 4, 6), 3, ;
+					  BETWEEN( MONTH( ldToday), 7, 9), 6, ;
+					  9)
+lnLastDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+ldExpected = DATETIME( lnYear, lnMonth, lnLastDay) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOQ( { :}), ;
+						 "GetLastEOQ() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastEOQ_TodaysDate_DateTime_ReturnsEOQofLastQuarter
+LOCAL ldToday, ldExpected, lnYear, lnMonth, lnLastDay
+ldToday = DATETIME()
+lnYear = IIF( MONTH( ldToday) = 1, YEAR( ldToday) - 1, YEAR( ldToday))
+lnMonth = ICASE( BETWEEN( MONTH( ldToday), 1, 3), 12, ;
+					  BETWEEN( MONTH( ldToday), 4, 6), 3, ;
+					  BETWEEN( MONTH( ldToday), 7, 9), 6, ;
+					  9)
+lnLastDay = ICASE( INLIST( lnMonth, 1, 3, 5, 7, 8, 10, 12), 31, ;
+						 INLIST( lnMonth, 4, 6, 9, 11), 30, ;
+						 28)  && change to 29 if testing during a leap year
+ldExpected = DATETIME( lnYear, lnMonth, lnLastDay) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOQ( ldToday), ;
+						 "GetLastEOQ() did not return the expected date")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetLastEOY() when parameter is a date
 *---------------------------------------------------------------------
 FUNCTION TestGetLastEOY_NoInput_ReturnsEOYofLastYear
 LOCAL ldToday, ldExpected
@@ -982,7 +2166,42 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOY( ldToday), ;
 ENDFUNC
 
 *---------------------------------------------------------------------
-*	Tests for GetLastMonday()
+*	Tests for GetLastEOY() when parameter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestGetLastEOY_NoInput_DateTime_ReturnsEOYofLastYear
+LOCAL ldToday, ldExpected
+ldToday = DATETIME()
+ldExpected = DATE( YEAR( ldToday) - 1, 12, 31) && default is datatype 'date' if no input
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOY(), ;
+						 "GetLastEOY() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastEOY_BadInput_DateTime_ReturnsEOYofLastYear
+LOCAL ldToday, ldExpected
+ldToday = DATETIME()
+ldExpected = DATE( YEAR( ldToday) - 1, 12, 31)&& default is datatype 'date' if input is invalid
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOY( .F.), ;
+						 "GetLastEOY() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastEOY_EmptyDate_DateTime_ReturnsEOYofLastYear
+LOCAL ldToday, ldExpected
+ldToday = DATETIME()
+ldExpected = DATETIME( YEAR( ldToday) - 1, 12, 31) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOY( { :}), ;
+						 "GetLastEOY() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastEOY_TodaysDate_DateTime_ReturnsEOYofLastYear
+LOCAL ldToday, ldExpected
+ldToday = DATETIME()
+ldExpected = DATETIME( YEAR( ldToday) - 1, 12, 31) + ( dc_nSecondsInADay -1) && 11:59:59 PM
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastEOY( ldToday), ;
+						 "GetLastEOY() did not return the expected date")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetLastMonday() when parameter is a date
 *---------------------------------------------------------------------
 FUNCTION TestGetLastMonday_NoInput_ReturnsLastMonday
 LOCAL ldToday, lnDOW, ldExpected
@@ -1074,7 +2293,99 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastMonday( {^2019-11-
 ENDFUNC
 
 *---------------------------------------------------------------------
-*	Tests for GetNextMonday()
+*	Tests for GetLastMonday() when parameter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestGetLastMonday_NoInput_DateTime_ReturnsLastMonday
+LOCAL ldToday, lnDOW, ldExpected
+ldToday = DATETIME()
+lnDOW = DOW( ldToday)
+ldExpected = ICASE( lnDOW = 1, TTOD( ldToday) - 6, ; 
+				  		  lnDOW = 2, TTOD( ldToday) - 7, ;
+				  		  TTOD( ldToday) - ( lnDOW - 2)) && default is datatype 'date' if no input
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastMonday(), ;
+						 "GetLastMonday() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastMonday_BadInput_DateTime_ReturnsLastMonday
+LOCAL ldToday, lnDOW, ldExpected
+ldToday = DATETIME()
+lnDOW = DOW( ldToday)
+ldExpected = ICASE( lnDOW = 1, TTOD( ldToday) - 6, ; 
+				  		  lnDOW = 2, TTOD( ldToday) - 7, ;
+				  		  TTOD( ldToday) - ( lnDOW - 2)) && default is datatype 'date' if input is invalid
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastMonday( .F.), ;
+						 "GetLastMonday() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetLastMonday_EmptyDate_DateTime_ReturnsLastMonday
+LOCAL ldToday, lnDOW, ldExpected
+ldToday = DATETIME()
+lnDOW = DOW( ldToday)
+ldExpected = DTOT( ICASE( lnDOW = 1, TTOD( ldToday) - 6, ; 
+				  		 		  lnDOW = 2, TTOD( ldToday) - 7, ;
+				  		  		  TTOD( ldToday) - ( lnDOW - 2)))
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastMonday( { :}), ;
+						 "GetLastMonday() did not return the expected date")
+ENDFUNC
+
+*	Sunday
+FUNCTION TestGetLastMonday_Sunday_DateTime_ReturnsLastMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-11})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastMonday( DTOT( {^2019-11-17})), ;
+						 "GetLastMonday() did not return the expected date")
+ENDFUNC
+
+*	Monday
+FUNCTION TestGetLastMonday_Monday_DateTime_ReturnsLastMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-11})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastMonday( DTOT( {^2019-11-18})), ;
+						 "GetLastMonday() did not return the expected date")
+ENDFUNC
+
+*	Tuesday
+FUNCTION TestGetLastMonday_Tuesday_DateTime_ReturnsLastMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-18})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastMonday( DTOT( {^2019-11-19})), ;
+						 "GetLastMonday() did not return the expected date")
+ENDFUNC
+
+*	Wednesday
+FUNCTION TestGetLastMonday_Wednesday_DateTime_ReturnsLastMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-18})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastMonday( DTOT( {^2019-11-20})), ;
+						 "GetLastMonday() did not return the expected date")
+ENDFUNC
+
+*	Thursday
+FUNCTION TestGetLastMonday_Thursday_DateTime_ReturnsLastMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-18})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastMonday( DTOT( {^2019-11-21})), ;
+						 "GetLastMonday() did not return the expected date")
+ENDFUNC
+
+*	Friday
+FUNCTION TestGetLastMonday_Friday_DateTime_ReturnsLastMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-18})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastMonday( DTOT( {^2019-11-22})), ;
+						 "GetLastMonday() did not return the expected date")
+ENDFUNC
+
+*	Saturday
+FUNCTION TestGetLastMonday_Saturday_DateTime_ReturnsLastMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-18})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetLastMonday( DTOT( {^2019-11-23})), ;
+						 "GetLastMonday() did not return the expected date")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetNextMonday() when paramter is a date
 *---------------------------------------------------------------------
 FUNCTION TestGetNextMonday_NoInput_ReturnsNextMonday
 LOCAL ldToday, lnDOW, ldExpected
@@ -1166,6 +2477,98 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNextMonday( {^2019-11-
 ENDFUNC
 
 *---------------------------------------------------------------------
+*	Tests for GetNextMonday() when paramter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestGetNextMonday_NoInput_DateTime_ReturnsNextMonday
+LOCAL ldToday, lnDOW, ldExpected
+ldToday = DATETIME()
+lnDOW = DOW( ldToday)
+ldExpected = ICASE( lnDOW = 1, TTOD( ldToday) + 1, ; 
+				 		  lnDOW = 2, TTOD( ldToday) + 7, ;
+				 		  TTOD( ldToday) + ( 7 - lnDOW) + 2) && default is datatype 'date' if no input
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNextMonday(), ;
+						 "GetNextMonday() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetNextMonday_BadInput_DateTime_ReturnsNextMonday
+LOCAL ldToday, lnDOW, ldExpected
+ldToday = DATETIME()
+lnDOW = DOW( ldToday)
+ldExpected = ICASE( lnDOW = 1, TTOD( ldToday) + 1, ; 
+				 		  lnDOW = 2, TTOD( ldToday) + 7, ;
+				 		  TTOD( ldToday) + ( 7 - lnDOW) + 2) && default is datatype 'date' if input is invalid
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNextMonday( .F.), ;
+						 "GetNextMonday() did not return the expected date")
+ENDFUNC
+
+FUNCTION TestGetNextMonday_EmptyDate_DateTime_ReturnsNextMonday
+LOCAL ldToday, lnDOW, ldExpected
+ldToday = DATETIME()
+lnDOW = DOW( ldToday)
+ldExpected = DTOT( ICASE( lnDOW = 1, TTOD( ldToday) + 1, ; 
+				 		 		  lnDOW = 2, TTOD( ldToday) + 7, ;
+				 		  		  TTOD( ldToday) + ( 7 - lnDOW) + 2))
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNextMonday( { :}), ;
+						 "GetNextMonday() did not return the expected date")
+ENDFUNC
+
+*	Sunday
+FUNCTION TestGetNextMonday_Sunday_DateTime_ReturnsNextMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-18})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNextMonday( DTOT( {^2019-11-17})), ;
+						 "GetNextMonday() did not return the expected date")
+ENDFUNC
+
+*	Monday
+FUNCTION TestGetNextMonday_Monday_DateTime_ReturnsNextMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-25})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNextMonday( DTOT( {^2019-11-18})), ;
+						 "GetNextMonday() did not return the expected date")
+ENDFUNC
+
+*	Tuesday
+FUNCTION TestGetNextMonday_Tuesday_DateTime_ReturnsNextMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-25})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNextMonday( DTOT( {^2019-11-19})), ;
+						 "GetNextMonday() did not return the expected date")
+ENDFUNC
+
+*	Wednesday
+FUNCTION TestGetNextMonday_Wednesday_DateTime_ReturnsNextMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-25})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNextMonday( DTOT( {^2019-11-20})), ;
+						 "GetNextMonday() did not return the expected date")
+ENDFUNC
+
+*	Thursday
+FUNCTION TestGetNextMonday_Thursday_DateTime_ReturnsNextMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-25})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNextMonday( DTOT( {^2019-11-21})), ;
+						 "GetNextMonday() did not return the expected date")
+ENDFUNC
+
+*	Friday
+FUNCTION TestGetNextMonday_Friday_DateTime_ReturnsNextMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-25})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNextMonday( DTOT( {^2019-11-22})), ;
+						 "GetNextMonday() did not return the expected date")
+ENDFUNC
+
+*	Saturday
+FUNCTION TestGetNextMonday_Saturday_DateTime_ReturnsNextMonday
+LOCAL ldExpected
+ldExpected = DTOT( {^2019-11-25})
+This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetNextMonday( DTOT( {^2019-11-23})), ;
+						 "GetNextMonday() did not return the expected date")
+ENDFUNC
+
+*---------------------------------------------------------------------
 *	Tests for GetDateFromString()
 *---------------------------------------------------------------------
 FUNCTION TestGetDateFromString_NoInput_ReturnsEmptyDate
@@ -1211,40 +2614,139 @@ This.AssertEquals( ldExpected, this.ioObjectToBeTested.GetDateFromString( "11.22
 ENDFUNC
 
 *---------------------------------------------------------------------
-*	Tests for IsLeapYear()
+*	Tests for IsLeapYear() when paramter is an string
 *---------------------------------------------------------------------
-FUNCTION TestIsLeapYear_1900_ReturnsFalse	&& centuries are not leap years
+FUNCTION TestIsLeapYear_1900_String_ReturnsFalse	&& centuries are not leap years
+This.AssertFalse( this.ioObjectToBeTested.IsLeapYear('1900'), ;
+					   "IsLeapYear did not return False for the year 1900")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2000_String_ReturnsTrue	&& millenia are leap years
+This.AssertTrue( this.ioObjectToBeTested.IsLeapYear('2000'), ;
+					  "IsLeapYear did not return True for the year 2000")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2017_String_ReturnsFalse	
+This.AssertFalse( this.ioObjectToBeTested.IsLeapYear('2017'), ;
+					   "IsLeapYear did not return False for the year 2017")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2018_String_ReturnsFalse	
+This.AssertFalse( this.ioObjectToBeTested.IsLeapYear('2018'), ;
+					   "IsLeapYear did not return False for the year 2018")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2019_String_ReturnsFalse	
+This.AssertFalse( this.ioObjectToBeTested.IsLeapYear('2019'), ;
+					   "IsLeapYear did not return False for the year 2019")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2020_String_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsLeapYear('2020'), ;
+					  "IsLeapYear did not return True for the year 2020")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for IsLeapYear() when paramter is an integer
+*---------------------------------------------------------------------
+FUNCTION TestIsLeapYear_1900_Integer_ReturnsFalse	&& centuries are not leap years
 This.AssertFalse( this.ioObjectToBeTested.IsLeapYear(1900), ;
 					   "IsLeapYear did not return False for the year 1900")
 ENDFUNC
 
-FUNCTION TestIsLeapYear_2000_ReturnsTrue	&& millenia are leap years
+FUNCTION TestIsLeapYear_2000_Integer_ReturnsTrue	&& millenia are leap years
 This.AssertTrue( this.ioObjectToBeTested.IsLeapYear(2000), ;
 					  "IsLeapYear did not return True for the year 2000")
 ENDFUNC
 
-FUNCTION TestIsLeapYear_2017_ReturnsFalse	
+FUNCTION TestIsLeapYear_2017_Integer_ReturnsFalse	
 This.AssertFalse( this.ioObjectToBeTested.IsLeapYear(2017), ;
 					   "IsLeapYear did not return False for the year 2017")
 ENDFUNC
 
-FUNCTION TestIsLeapYear_2018_ReturnsFalse	
+FUNCTION TestIsLeapYear_2018_Integer_ReturnsFalse	
 This.AssertFalse( this.ioObjectToBeTested.IsLeapYear(2018), ;
 					   "IsLeapYear did not return False for the year 2018")
 ENDFUNC
 
-FUNCTION TestIsLeapYear_2019_ReturnsFalse	
+FUNCTION TestIsLeapYear_2019_Integer_ReturnsFalse	
 This.AssertFalse( this.ioObjectToBeTested.IsLeapYear(2019), ;
 					   "IsLeapYear did not return False for the year 2019")
 ENDFUNC
 
-FUNCTION TestIsLeapYear_2020_ReturnsTrue
+FUNCTION TestIsLeapYear_2020_Integer_ReturnsTrue
 This.AssertTrue( this.ioObjectToBeTested.IsLeapYear(2020), ;
 					  "IsLeapYear did not return True for the year 2020")
 ENDFUNC
 
 *---------------------------------------------------------------------
-*	Tests for GetDateDayOrdinal()
+*	Tests for IsLeapYear() when paramter is a date
+*---------------------------------------------------------------------
+FUNCTION TestIsLeapYear_1900_Date_ReturnsFalse	&& centuries are not leap years
+This.AssertFalse( this.ioObjectToBeTested.IsLeapYear( {^1900-01-01}), ;
+					   "IsLeapYear did not return False for the year 1900")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2000_Date_ReturnsTrue	&& millenia are leap years
+This.AssertTrue( this.ioObjectToBeTested.IsLeapYear( {^2000-01-01}), ;
+					  "IsLeapYear did not return True for the year 2000")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2017_Date_ReturnsFalse	
+This.AssertFalse( this.ioObjectToBeTested.IsLeapYear( {^2017-01-01}), ;
+					   "IsLeapYear did not return False for the year 2017")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2018_Date_ReturnsFalse	
+This.AssertFalse( this.ioObjectToBeTested.IsLeapYear( {^2018-01-01}), ;
+					   "IsLeapYear did not return False for the year 2018")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2019_Date_ReturnsFalse	
+This.AssertFalse( this.ioObjectToBeTested.IsLeapYear( {^2019-01-01}), ;
+					   "IsLeapYear did not return False for the year 2019")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2020_Date_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsLeapYear( {^2020-01-01}), ;
+					  "IsLeapYear did not return True for the year 2020")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for IsLeapYear() when paramter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestIsLeapYear_1900_DateTime_ReturnsFalse	&& centuries are not leap years
+This.AssertFalse( this.ioObjectToBeTested.IsLeapYear( DTOT( {^1900-01-01})), ;
+					   "IsLeapYear did not return False for the year 1900")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2000_DateTime_ReturnsTrue	&& millenia are leap years
+This.AssertTrue( this.ioObjectToBeTested.IsLeapYear( DTOT( {^2000-01-01})), ;
+					  "IsLeapYear did not return True for the year 2000")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2017_DateTime_ReturnsFalse	
+This.AssertFalse( this.ioObjectToBeTested.IsLeapYear( DTOT( {^2017-01-01})), ;
+					   "IsLeapYear did not return False for the year 2017")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2018_DateTime_ReturnsFalse	
+This.AssertFalse( this.ioObjectToBeTested.IsLeapYear( DTOT( {^2018-01-01})), ;
+					   "IsLeapYear did not return False for the year 2018")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2019_DateTime_ReturnsFalse	
+This.AssertFalse( this.ioObjectToBeTested.IsLeapYear( DTOT( {^2019-01-01})), ;
+					   "IsLeapYear did not return False for the year 2019")
+ENDFUNC
+
+FUNCTION TestIsLeapYear_2020_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsLeapYear( DTOT( {^2020-01-01})), ;
+					  "IsLeapYear did not return True for the year 2020")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetDateDayOrdinal() when parameter is a date
 *---------------------------------------------------------------------
 FUNCTION TestGetDateDayOrdinal_Day1_ReturnsFirst
 This.AssertEquals( "first", this.ioObjectToBeTested.GetDateDayOrdinal( {^2019-11-1}), ;
@@ -1267,7 +2769,30 @@ This.AssertEquals( "twenty-second", this.ioObjectToBeTested.GetDateDayOrdinal( {
 ENDFUNC
 
 *---------------------------------------------------------------------
-*	Tests for GetFormattedDateString()
+*	Tests for GetDateDayOrdinal() when parameter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestGetDateDayOrdinal_Day1_DateTime_ReturnsFirst
+This.AssertEquals( "first", this.ioObjectToBeTested.GetDateDayOrdinal( DTOT( {^2019-11-1})), ;
+						 "GetDateDayOrdinal() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetDateDayOrdinal_Day10_DateTime_ReturnsTenth
+This.AssertEquals( "tenth", this.ioObjectToBeTested.GetDateDayOrdinal( DTOT( {^2019-11-10})), ;
+						 "GetDateDayOrdinal() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetDateDayOrdinal_Day19_DateTime_ReturnsNineteenth
+This.AssertEquals( "nineteenth", this.ioObjectToBeTested.GetDateDayOrdinal( DTOT( {^2019-11-19})), ;
+						 "GetDateDayOrdinal() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetDateDayOrdinal_Day22_DateTime_ReturnsTwentySecond
+This.AssertEquals( "twenty-second", this.ioObjectToBeTested.GetDateDayOrdinal( DTOT( {^2019-11-22})), ;
+						 "GetDateDayOrdinal() did not return the expected value")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetFormattedDateString() when parameter is a date
 *---------------------------------------------------------------------
 FUNCTION TestGetFormattedDateString_TypeOmitted_ReturnsExpected
 This.AssertEquals( "November 19, 2019", this.ioObjectToBeTested.GetFormattedDateString( {^2019-11-19}), ;
@@ -1281,6 +2806,24 @@ ENDFUNC
 
 FUNCTION TestGetFormattedDateString_Type2_ReturnsExpected
 This.AssertEquals( "Tuesday, November 19, 2019", this.ioObjectToBeTested.GetFormattedDateString( {^2019-11-19}, 2), ;
+						 "GetFormattedDateString() did not return the expected value")
+ENDFUNC
+
+*---------------------------------------------------------------------
+*	Tests for GetFormattedDateString() when parameter is a datetime
+*---------------------------------------------------------------------
+FUNCTION TestGetFormattedDateString_TypeOmitted_DateTime_ReturnsExpected
+This.AssertEquals( "November 19, 2019", this.ioObjectToBeTested.GetFormattedDateString( DTOT( {^2019-11-19})), ;
+						 "GetFormattedDateString() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetFormattedDateString_Type1_DateTime_ReturnsExpected
+This.AssertEquals( "November 19, 2019", this.ioObjectToBeTested.GetFormattedDateString( DTOT( {^2019-11-19}), 1), ;
+						 "GetFormattedDateString() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetFormattedDateString_Type2_DateTime_ReturnsExpected
+This.AssertEquals( "Tuesday, November 19, 2019", this.ioObjectToBeTested.GetFormattedDateString( DTOT( {^2019-11-19}), 2), ;
 						 "GetFormattedDateString() did not return the expected value")
 ENDFUNC
 
@@ -1383,37 +2926,77 @@ This.AssertFalse( this.ioObjectToBeTested.IsHoliday( {^2019-11-19}), ;
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsNewYearsDay_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-01-01}), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-01-01}), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsMemorialDay_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-05-27}), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-05-27}), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsIndependenceDay_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-07-04}), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-07-04}), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsLaborDay_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-09-02}), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-09-02}), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsVeteransDay_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-11-11}), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-11-11}), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsThanksgivingDay_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-11-28}), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-11-28}), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsChristmasDay_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-12-25}), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-12-25}), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_NotAHoliday_DateTime_ReturnsFalse
+This.AssertFalse( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-11-19})), ;
+						"IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsNewYearsDay_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-01-01})), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsMemorialDay_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-05-27})), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsIndependenceDay_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-07-04})), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsLaborDay_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-09-02})), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsVeteransDay_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-11-11})), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsThanksgivingDay_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-11-28})), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsChristmasDay_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-12-25})), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
@@ -1436,37 +3019,77 @@ This.AssertFalse( this.ioObjectToBeTested.IsHoliday( {^2019-11-19}, "USA"), ;
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsNewYearsDayUSA_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-01-01}, "USA"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-01-01}, "USA"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsMemorialDayUSA_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-05-27}, "USA"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-05-27}, "USA"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsIndependenceDayUSA_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-07-04}, "USA"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-07-04}, "USA"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsLaborDayUSA_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-09-02}, "USA"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-09-02}, "USA"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsVeteransDayUSA_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-11-11}, "USA"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-11-11}, "USA"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsThanksgivingDayUSA_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-11-28}, "USA"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-11-28}, "USA"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsChristmasDayUSA_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-12-25}, "USA"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-12-25}, "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_NotAHolidayUSA_DateTime_ReturnsFalse
+This.AssertFalse( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-11-19}), "USA"), ;
+						"IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsNewYearsDayUSA_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-01-01}), "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsMemorialDayUSA_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-05-27}), "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsIndependenceDayUSA_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-07-04}), "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsLaborDayUSA_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-09-02}), "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsVeteransDayUSA_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-11-11}), "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsThanksgivingDayUSA_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-11-28}), "USA"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsChristmasDayUSA_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-12-25}), "USA"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
@@ -1489,42 +3112,87 @@ This.AssertFalse( this.ioObjectToBeTested.IsHoliday( {^2019-11-19}, "Canada"), ;
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsNewYearsDayCanada_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-01-01}, "Canada"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-01-01}, "Canada"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsVictoriaDayCanada_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-05-20}, "Canada"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-05-20}, "Canada"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsCanadaDayCanada_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-07-01}, "Canada"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-07-01}, "Canada"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsLaborDayCanada_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-09-02}, "Canada"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-09-02}, "Canada"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsThanksgivingDayCanada_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-10-14}, "Canada"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-10-14}, "Canada"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsVeteransDayCanada_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-11-11}, "Canada"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-11-11}, "Canada"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsChristmasDayCanada_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-12-25}, "Canada"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-12-25}, "Canada"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
 FUNCTION TestIsHoliday_IsBoxingDayCanada_ReturnsTrue
-This.AssertTrue( this.ioObjectToBeTested.IsHoliday({^2019-12-26}, "Canada"), ;
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( {^2019-12-26}, "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_NotAHolidayCanada_DateTime_ReturnsFalse
+This.AssertFalse( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-11-19}), "Canada"), ;
+						"IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsNewYearsDayCanada_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-01-01}), "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsVictoriaDayCanada_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-05-20}), "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsCanadaDayCanada_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-07-01}), "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsLaborDayCanada_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-09-02}), "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsThanksgivingDayCanada_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-10-14}), "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsVeteransDayCanada_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-11-11}), "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsChristmasDayCanada_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-12-25}), "Canada"), ;
+					  "IsHoliday() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestIsHoliday_IsBoxingDayCanada_DateTime_ReturnsTrue
+This.AssertTrue( this.ioObjectToBeTested.IsHoliday( DTOT( {^2019-12-26}), "Canada"), ;
 					  "IsHoliday() did not return the expected value")
 ENDFUNC
 
@@ -2218,6 +3886,37 @@ This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetIntervalDays( ldToday,
 						 "GetIntervalDays() did not return the expected value")
 ENDFUNC
 
+FUNCTION TestGetIntervalDays_IntervalTypeOmitted_DateTime_ReturnsExpectedValue
+LOCAL ldToday, lnExpected
+ldToday = DATETIME()
+lnExpected = 1
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetIntervalDays( ldToday, ldToday + dc_nSecondsInADay ), ;
+						 "GetIntervalDays() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetIntervalDays_IntervalType0_DateTime_ReturnsExpectedValue
+LOCAL ldToday, lnExpected
+ldToday = DATETIME()
+lnExpected = 1
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetIntervalDays( ldToday, ldToday + dc_nSecondsInADay, 0 ), ;
+						 "GetIntervalDays() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetIntervalDays_IntervalType1_DateTime_ReturnsExpectedValue
+LOCAL ldToday, lnExpected
+ldToday = DATETIME()
+lnExpected = 2
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetIntervalDays( ldToday, ldToday + dc_nSecondsInADay, 1 ), ;
+						 "GetIntervalDays() did not return the expected value")
+ENDFUNC
+
+FUNCTION TestGetIntervalDays_IntervalType2_DateTime_ReturnsExpectedValue
+LOCAL ldToday, lnExpected
+ldToday = DATETIME()
+lnExpected = 0
+This.AssertEquals( lnExpected, this.ioObjectToBeTested.GetIntervalDays( ldToday, ldToday + dc_nSecondsInADay, 2 ), ;
+						 "GetIntervalDays() did not return the expected value")
+ENDFUNC
 
 *---------------------------------------------------------------------
 *	Tests not yet implemented
