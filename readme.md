@@ -10,4 +10,6 @@ See the [FoxDates Documentation](FoxDates_Docs.md) for a list of the functions a
 
 This project includes a set of [FoxUnit](https://github.com/VFPX/FoxUnit) tests for the functions - see [foxdates_tests.prg](Tests/foxdates_tests.prg).
 
+See the [release notes](ReleaseNotes.md) for what's new.
+
 This project is licensed under the terms of the BSD 3-clause license.
