@@ -5,6 +5,8 @@
 * Compiler:          Visual FoxPro 09.00.0000.7423 for Windows
 * Abstract:          A set of functions for working with dates and datetimes.
 *==============================================================================
+#DEFINE C_Version 2021.0
+#DEFINE dc_nSecondsInADay 86400
 
 DEFINE CLASS clsFoxDates AS Custom
 
@@ -34,52 +36,74 @@ ENDPROC && Destroy
 *   clsFoxDates :: GetFirstOfMonth
 *------------------------------------
 *   Function: Calculate the first day of the month
-*       Pass: tdDate - a date (optional, defaults to the current date)
-*     Return: Date
-*   Comments: 
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
+*     Return: Date or datetime
+*   Comments: Return value is same datatype as parameter
 *--------------------------------------------------------------------
-FUNCTION GetFirstOfMonth( tdDate as Date) as Date 
-IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+FUNCTION GetFirstOfMonth( tdDate as Variant) as Variant
+IF INLIST( VARTYPE( tdDate), 'D', 'T')
 ELSE
 	tdDate = DATE()
 ENDIF
-RETURN tdDate - DAY( tdDate) + 1 
+LOCAL lcParmType, ldDate, ldReturnDate
+lcParmType = VARTYPE( tdDate)
+IF EMPTY( tdDate)
+	ldDate = DATE()
+ELSE	
+	ldDate = IIF( lcParmType = 'D', tdDate, TTOD( tdDate))
+ENDIF
+ldReturnDate = ldDate - DAY( ldDate) + 1
+RETURN IIF( lcParmType = 'D', ldReturnDate, DTOT( ldReturnDate))
 ENDFUNC && GetFirstOfMonth
 
 *--------------------------------------------------------------------
 *   clsFoxDates :: GetLastOfMonth
 *------------------------------------
 *   Function: Calculate the last day of the month
-*       Pass: tdDate - a date (optional, defaults to the current date)
-*     Return: Date
-*   Comments: 
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
+*     Return: Date or datetime
+*   Comments: Return value is same datatype as parameter
 *--------------------------------------------------------------------
-FUNCTION GetLastOfMonth( tdDate as Date) as Date 
-IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+FUNCTION GetLastOfMonth( tdDate as Variant) as Variant 
+IF INLIST( VARTYPE( tdDate), 'D', 'T')
 ELSE
 	tdDate = DATE()
 ENDIF
-RETURN GOMONTH( tdDate - DAY( tdDate) + 1, 1) - 1
+LOCAL lcParmType, ldDate, ldReturnDate
+lcParmType = VARTYPE( tdDate)
+IF EMPTY( tdDate)
+	ldDate = DATE()
+ELSE	
+	ldDate = IIF( lcParmType = 'D', tdDate, TTOD( tdDate))
+ENDIF
+ldReturnDate = GOMONTH( ldDate - DAY( ldDate) + 1, 1) - 1
 *	Another alternative...
-*	RETURN GOMONTH( tdDate, 1) - DAY( GOMONTH( tdDate, 1))
+*	ldReturnDate = GOMONTH( tdDate, 1) - DAY( GOMONTH( tdDate, 1))
+RETURN IIF( lcParmType = 'D', ldReturnDate, DTOT( ldReturnDate) + ( dc_nSecondsInADay -1))
 ENDFUNC && GetLastOfMonth
 
 *--------------------------------------------------------------------
 *   clsFoxDates :: GetDaysInMonth
 *------------------------------------
 *   Function: Get the number of days in the specified month and year
-*       Pass: tdDate - a date (optional, defaults to the current date)
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
 *     Return: Integer - the number of days in the month
 *   Comments: 
 *--------------------------------------------------------------------
-FUNCTION GetDaysInMonth( tdDate as Date) as Integer
-IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+FUNCTION GetDaysInMonth( tdDate as Variant) as Integer
+IF INLIST( VARTYPE( tdDate), 'D', 'T')
 ELSE
 	tdDate = DATE()
 ENDIF
-LOCAL ldDate, lnDaysInMonth
-ldDate = DATE( YEAR( tdDate), MONTH( tdDate), 1)	&& first of the month
-lnDaysInMonth = GOMONTH( ldDate, 1) - ldDate			&& days in that month
+LOCAL lcParmType, ldDate, ldFirstOfMonth, lnDaysInMonth
+lcParmType = VARTYPE( tdDate)
+IF EMPTY( tdDate)
+	ldDate = DATE()
+ELSE	
+	ldDate = IIF( lcParmType = 'D', tdDate, TTOD( tdDate))
+ENDIF
+ldFirstOfMonth = DATE( YEAR( ldDate), MONTH( ldDate), 1)	&& first of the month
+lnDaysInMonth = GOMONTH( ldFirstOfMonth, 1) - ldFirstOfMonth && days in that month
 RETURN lnDaysInMonth
 ENDFUNC && GetDaysInMonth
 
@@ -87,155 +111,248 @@ ENDFUNC && GetDaysInMonth
 *   clsFoxDates :: GetLastEOM
 *------------------------------------
 *   Function: Calculate the last day of the previous month
-*       Pass: tdDate - a date (optional, defaults to the current date)
-*     Return: Date
-*   Comments: 
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
+*     Return: Date or datetime
+*   Comments: Return value is same datatype as parameter
 *--------------------------------------------------------------------
-FUNCTION GetLastEOM( tdDate as Date) as Date
-IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+FUNCTION GetLastEOM( tdDate as Variant) as Variant
+IF INLIST( VARTYPE( tdDate), 'D', 'T')
 ELSE
 	tdDate = DATE()
 ENDIF
-RETURN this.GetLastOfMonth( GOMONTH( tdDate, -1))
+LOCAL lcParmType, ldDate, ldReturnDate
+lcParmType = VARTYPE( tdDate)
+IF EMPTY( tdDate)
+	ldDate = DATE()
+ELSE
+	ldDate = tdDate
+ENDIF
+ldReturnDate = this.GetLastOfMonth( GOMONTH( ldDate, -1)) && GOMONTH() always returns a 'date' datatype
+RETURN IIF( lcParmType = 'D', ldReturnDate, DTOT( ldReturnDate) + ( dc_nSecondsInADay - 1))
 ENDFUNC && GetLastEOM
 
 *--------------------------------------------------------------------
 *   clsFoxDates :: GetBOQ
 *------------------------------------
 *   Function: Calculate the beginning of the quarter date
-*       Pass: tdDate - a date (optional, defaults to the current date)
-*     Return: Date
-*   Comments: Calendar quarters are Jan-Mar, Apr-Jun, Jul-Sep, and Oct-Dec
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
+*     Return: Date or datetime
+*   Comments: Return value is same datatype as parameter
+*             Calendar quarters are Jan-Mar, Apr-Jun, Jul-Sep, and Oct-Dec
 *--------------------------------------------------------------------
-FUNCTION GetBOQ( tdDate as Date) as Date
-IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+FUNCTION GetBOQ( tdDate as Variant) as Variant
+IF INLIST( VARTYPE( tdDate), 'D', 'T')
 ELSE
 	tdDate = DATE()
 ENDIF
+LOCAL lcParmType, ldReturnDate
+lcParmType = VARTYPE( tdDate)
+IF EMPTY( tdDate)
+	ldDate = DATE()
+ELSE
+	ldDate = tdDate
+ENDIF
 LOCAL lnMonth
-lnMonth = MONTH( tdDate)
+lnMonth = MONTH( ldDate)
 lnMonth = ICASE( BETWEEN( lnMonth, 1, 3), 1, ;
 					  BETWEEN( lnMonth, 4, 6), 4, ;
 					  BETWEEN( lnMonth, 7, 9), 7, ;
 					  10)
-RETURN DATE( YEAR( tdDate), lnMonth, 1)
+ldReturnDate = DATE( YEAR( ldDate), lnMonth, 1)
+RETURN IIF( lcParmType = 'D', ldReturnDate, DTOT( ldReturnDate))
 ENDFUNC && GetBOQ
+
+*--------------------------------------------------------------------
+*   clsFoxDates :: GetLastBOQ
+*------------------------------------
+*   Function: Calculate the beginning of the previous quarter
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
+*     Return: Date or datetime
+*   Comments: Return value is same datatype as parameter
+*             Calendar quarters are Jan-Mar, Apr-Jun, Jul-Sep, and Oct-Dec
+*--------------------------------------------------------------------
+FUNCTION GetLastBOQ( tdDate as Variant) as Variant
+IF INLIST( VARTYPE( tdDate), 'D', 'T')
+ELSE
+	tdDate = DATE()
+ENDIF
+LOCAL lcParmType, ldReturnDate
+lcParmType = VARTYPE( tdDate)
+IF EMPTY( tdDate)
+	ldDate = DATE()
+ELSE
+	ldDate = tdDate
+ENDIF
+LOCAL lnMonth
+lnMonth = MONTH( ldDate)
+lnMonth = ICASE( BETWEEN( lnMonth, 1, 3), 1, ;
+					  BETWEEN( lnMonth, 4, 6), 4, ;
+					  BETWEEN( lnMonth, 7, 9), 7, ;
+					  10)
+ldReturnDate = GOMONTH( DATE( YEAR( ldDate), lnMonth, 1), -3)
+RETURN IIF( lcParmType = 'D', ldReturnDate, DTOT( ldReturnDate))
+ENDFUNC && GetLastBOQ
 
 *--------------------------------------------------------------------
 *   clsFoxDates :: GetEOQ
 *------------------------------------
 *   Function: Calculate the end of quarter date
-*       Pass: tdDate - a date (optional, defaults to the current date)
-*     Return: Date
-*   Comments: 
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
+*     Return: Date or datetime
+*   Comments: Return value is same datatype as parameter
+*             Calendar quarters are Jan-Mar, Apr-Jun, Jul-Sep, and Oct-Dec
 *--------------------------------------------------------------------
 FUNCTION GetEOQ( tdDate as Date) as Date
-IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+IF INLIST( VARTYPE( tdDate), 'D', 'T')
 ELSE
 	tdDate = DATE()
 ENDIF
-IF ( MONTH( tdDate) = 3 and DAY( tdDate) = 31) or ;
-	( MONTH( tdDate) = 6 and DAY( tdDate) = 30) or ;
-	( MONTH( tdDate) = 9 and DAY( tdDate) = 30) or ;
-	( MONTH( tdDate) = 12 and DAY( tdDate) = 31)
-	RETURN tdDate
-ENDIF 
-LOCAL lnYear, lnMonth, lnDay
-lnYear = YEAR( tdDate)
-DO CASE
-	CASE MONTH( tdDate) = 1 OR MONTH( tdDate) = 2 OR MONTH( tdDate) = 3
-		  lnMonth = 3
-		  lnDay = 31
-	CASE MONTH( tdDate) = 4 OR MONTH( tdDate) = 5 OR MONTH( tdDate) = 6
-		  lnMonth = 6
-		  lnDay = 30
-	CASE MONTH( tdDate) = 7 OR MONTH( tdDate) = 8 OR MONTH( tdDate) = 9
-		  lnMonth = 9
-		  lnDay = 30
-	OTHERWISE
-		  lnMonth = 12
-		  lnDay = 31
-ENDCASE
-RETURN DATE( lnYear, lnMonth, lnDay)
+LOCAL lcParmType, ldReturnDate
+lcParmType = VARTYPE( tdDate)
+IF EMPTY( tdDate)
+	ldDate = DATE()
+ELSE
+	ldDate = tdDate
+ENDIF
+IF ( MONTH( ldDate) = 3 and DAY( ldDate) = 31) OR ;
+	( MONTH( ldDate) = 6 and DAY( ldDate) = 30) OR ;
+	( MONTH( ldDate) = 9 and DAY( ldDate) = 30) OR ;
+	( MONTH( ldDate) = 12 and DAY( ldDate) = 31)
+	ldReturnDate = ldDate
+ELSE
+	LOCAL lnYear, lnMonth, lnDay
+	lnYear = YEAR( ldDate)
+	DO CASE
+		CASE INLIST( MONTH( ldDate), 1, 2, 3)
+			  lnMonth = 3
+			  lnDay = 31
+		CASE INLIST( MONTH( ldDate), 4, 5, 6)
+			  lnMonth = 6
+			  lnDay = 30
+		CASE INLIST( MONTH( ldDate), 7, 8, 9)
+			  lnMonth = 9
+			  lnDay = 30
+		OTHERWISE
+			  lnMonth = 12
+			  lnDay = 31
+	ENDCASE
+	ldReturnDate = DATE( lnYear, lnMonth, lnDay)
+ENDIF
+RETURN IIF( lcParmType = 'D', ldReturnDate, DTOT( ldReturnDate) + ( dc_nSecondsInADay - 1))
 ENDFUNC && GetEOQ
 
 *--------------------------------------------------------------------
 *   clsFoxDates :: GetLastEOQ
 *------------------------------------
 *   Function: Calculate the most recent end of quarter date
-*       Pass: tdDate - a date (optional, defaults to the current date)
-*     Return: Date
-*   Comments: 
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
+*     Return: Date or datetime
+*   Comments: Return value is same datatype as parameter
+*             Calendar quarters are Jan-Mar, Apr-Jun, Jul-Sep, and Oct-Dec
 *--------------------------------------------------------------------
-FUNCTION GetLastEOQ( tdDate as Date) as Date
-IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+FUNCTION GetLastEOQ( tdDate as Variant) as Variant
+IF INLIST( VARTYPE( tdDate), 'D', 'T')
 ELSE
 	tdDate = DATE()
 ENDIF
+LOCAL lcParmType, ldReturnDate
+lcParmType = VARTYPE( tdDate)
+IF EMPTY( tdDate)
+	ldDate = DATE()
+ELSE
+	ldDate = tdDate
+ENDIF
 LOCAL lnYear, lnMonth, lnDay
-lnYear = YEAR( tdDate)
+lnYear = YEAR( ldDate)
 DO CASE
-	CASE MONTH( tdDate) = 1 OR MONTH( tdDate) = 2 OR MONTH( tdDate) = 3
+	CASE INLIST( MONTH( ldDate), 1, 2, 3)
 		lnMonth = 12
 		lnDay = 31
 		lnYear = lnYear - 1
-	CASE MONTH( tdDate) = 4 OR MONTH( tdDate) = 5 OR MONTH( tdDate) = 6
+	CASE INLIST( MONTH( ldDate), 4, 5, 6)
 		lnMonth = 3
 		lnDay = 31
-	CASE MONTH( tdDate) = 7 OR MONTH( tdDate) = 8 OR MONTH( tdDate) = 9
+	CASE INLIST( MONTH( ldDate), 7, 8, 9)
 		lnMonth = 6
 		lnDay = 30
 	OTHERWISE
 		lnMonth = 9
 		lnDay = 30
 ENDCASE
-RETURN DATE( lnYear, lnMonth, lnDay)
+ldReturnDate = DATE( lnYear, lnMonth, lnDay)
+RETURN IIF( lcParmType = 'D', ldReturnDate, DTOT( ldReturnDate) + ( dc_nSecondsInADay - 1))
 ENDFUNC && GetLastEOQ
 
 *--------------------------------------------------------------------
 *   clsFoxDates :: GetLastEOY
 *------------------------------------
 *   Function: Calculate the most recent end-of-year date
-*       Pass: tdDate - a date (optional, defaults to the current date)
-*     Return: Date
-*   Comments: 
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
+*     Return: Date or datetime
+*   Comments: Return value is same datatype as parameter
 *--------------------------------------------------------------------
-FUNCTION GetLastEOY( tdDate as Date) as Date
-IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+FUNCTION GetLastEOY( tdDate as Variant) as Variant
+IF INLIST( VARTYPE( tdDate), 'D', 'T')
 ELSE
 	tdDate = DATE()
 ENDIF
+LOCAL lcParmType, ldDate, ldReturnDate
+lcParmType = VARTYPE( tdDate)
+IF EMPTY( tdDate)
+	ldDate = DATE()
+ELSE
+	ldDate = tdDate
+ENDIF
 LOCAL lnYear, lnMonth, lnDay
-lnYear = YEAR( tdDate) - 1
+lnYear = YEAR( ldDate) - 1
 lnMonth = 12
 lnDay = 31
-RETURN DATE( lnYear, lnMonth, lnDay)
+ldReturnDate = DATE( lnYear, lnMonth, lnDay)
+RETURN IIF( lcParmType = 'D', ldReturnDate, DTOT( ldReturnDate) + ( dc_nSecondsInADay - 1))
 ENDFUNC && GetLastEOY
 
 *--------------------------------------------------------------------
 *   clsFoxDates :: GetLastMonday
 *------------------------------------
 *   Function: Calculate last Monday's date
-*       Pass: tdDate - a date (optional, defaults to the current date)
-*     Return: Date
-*   Comments: 
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
+*     Return: Date or datetime
+*   Comments: Return value is same datatype as parameter
 *--------------------------------------------------------------------
-FUNCTION GetLastMonday( tdDate as Date) as Date 
-IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+FUNCTION GetLastMonday( tdDate as Variant) as Variant
+IF INLIST( VARTYPE( tdDate), 'D', 'T')
 ELSE
 	tdDate = DATE()
 ENDIF
+LOCAL lcParmType, ldDate
+lcParmType = VARTYPE( tdDate)
+IF EMPTY( tdDate)
+	ldDate = IIF( lcParmType = 'D', DATE(), DTOT( DATE()))
+ELSE
+	ldDate = tdDate
+ENDIF
 LOCAL lnDOW, ldMonday
-lnDOW = DOW( tdDate)
-ldMonday = tdDate
-DO CASE
-	CASE lnDOW = 1						&& Sunday
-		ldMonday = tdDate - 6
-	CASE lnDOW = 2						&& Monday
-		ldMonday = tdDate - 7
-	OTHERWISE 							&& Tuesday thru Saturday
-		ldMonday = tdDate - (lnDOW - 2)
-ENDCASE 
+lnDOW = DOW( ldDate)
+ldMonday = ldDate
+IF lcParmType = 'D'
+	DO CASE
+		CASE lnDOW = 1						&& Sunday
+			ldMonday = ldDate - 6
+		CASE lnDOW = 2						&& Monday
+			ldMonday = ldDate - 7
+		OTHERWISE 							&& Tuesday thru Saturday
+			ldMonday = ldDate - (lnDOW - 2)
+	ENDCASE 
+ELSE
+	DO CASE
+		CASE lnDOW = 1						&& Sunday
+			ldMonday = ldDate - ( dc_nSecondsInADay * 6)
+		CASE lnDOW = 2						&& Monday
+			ldMonday = ldDate - ( dc_nSecondsInADay * 7)
+		OTHERWISE 							&& Tuesday thru Saturday
+			ldMonday = ldDate - ( dc_nSecondsInADay * (lnDOW - 2))
+	ENDCASE 
+ENDIF	&& lcParmType = 'D'
 RETURN ldMonday
 ENDFUNC && GetLastMonday
 
@@ -243,26 +360,44 @@ ENDFUNC && GetLastMonday
 *   clsFoxDates :: GetNextMonday
 *------------------------------------
 *   Function: Calculates next Monday's date
-*       Pass: tdDate - a date (optional, defaults to the current date)
-*     Return: Date
-*   Comments: 
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
+*     Return: Date or datetime
+*   Comments: Return value is same datatype as parameter
 *--------------------------------------------------------------------
-FUNCTION GetNextMonday( tdDate as Date) as Date
-IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+FUNCTION GetNextMonday( tdDate as Variant) as Variant
+IF INLIST( VARTYPE( tdDate), 'D', 'T')
 ELSE
 	tdDate = DATE()
 ENDIF
+LOCAL lcParmType, ldDate
+lcParmType = VARTYPE( tdDate)
+IF EMPTY( tdDate)
+	ldDate = IIF( lcParmType = 'D', DATE(), DTOT( DATE()))
+ELSE
+	ldDate = tdDate
+ENDIF
 LOCAL lnDOW, ldMonday
-lnDOW = DOW( tdDate)
-ldMonday = tdDate
-DO CASE
-	CASE lnDOW = 1							&& Sunday
-		ldMonday = tdDate + 1
-	CASE lnDOW = 2							&& Monday
-		ldMonday = tdDate + 7
-	OTHERWISE 							&& Tuesday thru Saturday
-		ldMonday = tdDate + (7 - lnDOW) + 2
-ENDCASE
+lnDOW = DOW( ldDate)
+ldMonday = ldDate
+IF lcParmType = 'D'
+	DO CASE
+		CASE lnDOW = 1							&& Sunday
+			ldMonday = ldDate + 1
+		CASE lnDOW = 2							&& Monday
+			ldMonday = ldDate + 7
+		OTHERWISE 							&& Tuesday thru Saturday
+			ldMonday = ldDate + (7 - lnDOW) + 2
+	ENDCASE
+ELSE
+	DO CASE
+		CASE lnDOW = 1							&& Sunday
+			ldMonday = ldDate + ( dc_nSecondsInADay * 1)
+		CASE lnDOW = 2							&& Monday
+			ldMonday = ldDate + ( dc_nSecondsInADay * 7)
+		OTHERWISE 							&& Tuesday thru Saturday
+			ldMonday = ldDate + ( dc_nSecondsInADay * ((7 - lnDOW) + 2))
+	ENDCASE
+ENDIF && lcParmType = 'D' 
 RETURN ldMonday
 ENDFUNC && GetNextMonday
 
@@ -335,7 +470,7 @@ ENDFUNC	&& GetDateFromString()
 *   clsFoxDates :: IsLeapYear
 *------------------------------------
 *   Function: Determine if a year is a leap year
-*       Pass: txParm - a string, numeric value, or date representing a year
+*       Pass: txParm - a string, numeric value, date, or datetime representing a year
 *     Return: Logical
 *   Comments: Returns True if the year is a leap year, otherwise
 *             returns False.
@@ -351,7 +486,7 @@ DO CASE
 		lcYear = ALLTRIM( txParm)
 	CASE TYPE( "txParm") = "N"
 		lcYear = ALLTRIM( STR( txParm))
-	CASE TYPE( "txParm") = "D"
+	CASE INLIST( TYPE( 'txParm'), 'D', 'T')
 		IF !EMPTY( YEAR( txParm))   && If we got a valid date
 			lcYear = ALLTRIM( STR( YEAR( txParm)))   && then capture its year.
 		ELSE             && Otherwise if we got an invalid date then force
@@ -373,12 +508,12 @@ ENDFUNC && IsLeapYear
 *------------------------------------
 *   Function: Returns the day of a date as an ordinal string, as in
 *             "first" or "tenth".
-*       Pass: tdDate - a date (optional, defaults to the current date)
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
 *     Return: Character
 *   Comments: 
 *--------------------------------------------------------------------
 FUNCTION GetDateDayOrdinal( tdDate as Date) as String
-IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+IF INLIST( VARTYPE( tdDate), 'D', 'T') AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
 ENDIF
@@ -457,14 +592,14 @@ ENDFUNC && GetDateDayOrdinal
 *   clsFoxDates :: GetFormattedDateString
 *------------------------------------
 *   Function: Format a date as a string for display.
-*       Pass: tdDate - a date (optional, defaults to the current date)
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
 *             tnFormat - 1=format like May 15, 2012 (default)
 *                        2=format like Tuesday, May 15, 2012
 *     Return: String
 *   Comments: 
 *--------------------------------------------------------------------
 FUNCTION GetFormattedDateString( tdDate as Date, tnFormat as Integer ) as String
-IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+IF INLIST( VARTYPE( tdDate), 'D', 'T') AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
 ENDIF
@@ -544,13 +679,13 @@ ENDFUNC && GetNthBusinessDay
 *   clsFoxDates :: IsHoliday
 *------------------------------------
 *   Function: Determines is a given date is a holiday.
-*       Pass: tdDate - a date (optional, defaults to the current date)
+*       Pass: tdDate - a date or datetime (optional, defaults to the current date)
 *             tcCountry - optional, defaults to USA
 *     Return: Logical - .T. if holiday, otherwise .F.
 *   Comments: Future enhancement - add other country codes.
 *--------------------------------------------------------------------
 FUNCTION IsHoliday( tdDate as Date, tcCountry as String) as Logical
-IF VARTYPE( tdDate) = "D" AND NOT EMPTY( tdDate)
+IF INLIST( VARTYPE( tdDate), 'D', 'T') AND NOT EMPTY( tdDate)
 ELSE
 	tdDate = DATE()
 ENDIF
@@ -875,7 +1010,7 @@ ENDFUNC && GetDuration
 *             Returns the empty string if txDateTime is not a date or a datetime.
 *--------------------------------------------------------------------
 FUNCTION GetRFC2822( txDateTime as Variant, txOffset as Variant) as String
-IF ( VARTYPE( txDateTime) = "D" OR VARTYPE( txDateTime) = "T") AND NOT EMPTY( txDateTime)
+IF INLIST( VARTYPE( txDateTime), 'D', 'T') AND NOT EMPTY( txDateTime)
 ELSE
 	RETURN ""
 ENDIF
@@ -1028,8 +1163,8 @@ ENDFUNC && Get24HourTimeString
 *   clsFoxDates :: GetIntervalDays
 *------------------------------------
 *   Function: Get the number of days between two dates
-*       Pass: tdStartDate    - the starting date
-*             tdEndDate      - the ending date
+*       Pass: tdStartDate    - the starting date or datetime
+*             tdEndDate      - the ending date or datetime
 *             tnIntervalType - 0 = semi-open interval (default)
 *                                  includes the start date but not the end date
 *                              1 = closed interval 
@@ -1038,19 +1173,23 @@ ENDFUNC && Get24HourTimeString
 *                                  does not include either date
 *     Return: Integer
 *   Comments: Returns 0 if date parameters are missing or invalid.
+*             The time portion of datetime parameters is ignored.
 *--------------------------------------------------------------------
-FUNCTION GetIntervalDays( tdStartDate as Date, ;
-								  tdEndDate as Date, ;
+FUNCTION GetIntervalDays( tdStartDate as Variant, ;
+								  tdEndDate as Variant, ;
 								  tnIntervalType as Integer) as Integer 
-IF VARTYPE( tdStartDate) = "D" AND NOT EMPTY( tdStartDate)
+IF INLIST( VARTYPE( tdStartDate), 'D', 'T') AND NOT EMPTY( tdStartDate)
 ELSE
 	RETURN 0
 ENDIF
-IF VARTYPE( tdEndDate) = "D" AND NOT EMPTY( tdEndDate)
+IF INLIST( VARTYPE( tdEndDate), 'D', 'T') AND NOT EMPTY( tdEndDate)
 ELSE
 	RETURN 0
 ENDIF
-IF tdStartDate = tdEndDate		&& special case, interval is zero regardless of interval type
+LOCAL ldStartDate, ldEndDate
+ldStartDate = IIF( VARTYPE( tdStartDate) = 'D', tdStartDate, TTOD( tdStartDate))
+ldEndDate = IIF( VARTYPE( tdEndDate) = 'D', tdEndDate, TTOD( tdEndDate))
+IF ldStartDate = ldEndDate		&& special case, interval is zero regardless of interval type
 	RETURN 0
 ENDIF
 IF VARTYPE( tnIntervalType) = "N" AND BETWEEN( tnIntervalType, 0, 2)
@@ -1058,7 +1197,7 @@ ELSE
 	tnIntervalType = 0	&& default is semi-open interval
 ENDIF
 LOCAL lnInterval
-lnInterval = ABS( tdEndDate - tdStartDate)
+lnInterval = ABS( ldEndDate - ldStartDate)
 DO CASE 
 	CASE tnIntervalType = 1		&& closed interval, counts both dates
 		lnInterval = lnInterval + 1
