@@ -15,4 +15,6 @@ Released 24 April 2021
 
 2. Added new function GetLastBOQ().
 
-3. Added ReleaseNotes.md (this document).
+3. Added unit tests using datetime parameters. 
+
+4. Added ReleaseNotes.md (this document).
